@@ -58,16 +58,24 @@
       <!--begin::Header-->
       <nav class="app-header navbar navbar-expand bg-body">
         <!--begin::Container-->
-        <div class="container-fluid">
           <!--begin::Start Navbar Links-->
-          <ul class="navbar-nav">
-          <a href="index3.html" class="nav-link"><i></i> Home</a></li>
-          <li class="nav-item"><a href="items.php" class="nav-link"><i></i> Items</a></li>
-          <li class="nav-item"><a href="customers.php" class="nav-link"><i></i> Customers</a></li>
-          <li class="nav-item"><a href="suppliers.php" class="nav-link"><i></i> Suppliers</a></li>
-          <li class="nav-item"><a href="item_customer.php" class="nav-link"><i></i> Item Customer</a></li>
-          <li class="nav-item"><a href="invoice.php" class="nav-link active"><i></i> Invoice</a></li>
-          </ul>
+          <!-- Header -->
+    
+        <div class="container-fluid">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" data-lte-toggle="sidebar" href="#" role="button">
+                        <i class="bi bi-list"></i>
+                    </a>
+                </li>
+                <li class="nav-item d-none d-md-block"><a href="index.php" class="nav-link">Home</a></li>
+                <li class="nav-item"><a href="items.php" class="nav-link">Items</a></li>
+                <li class="nav-item"><a href="customers.php" class="nav-link">Customers</a></li>
+                <li class="nav-item"><a href="suppliers.php" class="nav-link">Suppliers</a></li>
+                <li class="nav-item"><a href="item_customer.php" class="nav-link">Item Customer</a></li>
+                <li class="nav-item"><a href="invoice.php" class="nav-link">Invoice</a></li>
+            </ul>
+        </div>
           <!--end::Start Navbar Links-->
           <!--begin::End Navbar Links-->
           <ul class="navbar-nav ms-auto">
@@ -89,89 +97,28 @@
             <!--end::User Menu Dropdown-->
           </ul>
           <!--end::End Navbar Links-->
-        </div>
         <!--end::Container-->
       </nav>
       <!--end::Header-->
       <!--begin::Sidebar-->
-      <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
-        <!--begin::Sidebar Brand-->
-        <div class="sidebar-brand">
-          <!--begin::Brand Link-->
-          <a href="./index.html" class="brand-link">
-            <!--begin::Brand Text-->
-            <span class="brand-text fw-light"><a href="index3.html">Wevelope</a></span>
-            <!--end::Brand Text-->
-          </a>
-          <!--end::Brand Link-->
-        </div>
-        <!--end::Sidebar Brand-->
-        <!--begin::Sidebar Wrapper-->
-        <div class="sidebar-wrapper">
-          <nav class="mt-2">
-            <!--begin::Sidebar Menu-->
-            <ul
-              class="nav sidebar-menu flex-column"
-              data-lte-toggle="treeview"
-              role="menu"
-              data-accordion="false"
-            >
-              <li class="nav-item menu-open">
-                <ul class="nav nav-treeview">
-                  <li class="nav-item">
-                    <a href="./index3.html" class="nav-link active">
-                      <i class="nav-icon bi bi-circle"></i>
-                      <p>Home</p>
-                    </a>
-                  </li>
-                </ul>
-                <ul class="nav nav-treeview">
-                  <li class="nav-item">
-                    <a href="items.php" class="nav-link active">
-                      <i class="nav-icon bi bi-circle"></i>
-                      <p>Items</p>
-                    </a>
-                  </li>
-                </ul>
-                <ul class="nav nav-treeview">
-                  <li class="nav-item">
-                    <a href="customers.php" class="nav-link active">
-                      <i class="nav-icon bi bi-circle"></i>
-                      <p>Customers</p>
-                    </a>
-                  </li>
-                </ul>
-                <ul class="nav nav-treeview">
-                  <li class="nav-item">
-                    <a href="Suppliers.php" class="nav-link active">
-                      <i class="nav-icon bi bi-circle"></i>
-                      <p>Suppliers</p>
-                    </a>
-                  </li>
-                </ul>
-                <ul class="nav nav-treeview">
-                  <li class="nav-item">
-                    <a href="item_customer.php" class="nav-link active">
-                      <i class="nav-icon bi bi-circle"></i>
-                      <p>item_customer</p>
-                    </a>
-                  </li>
-                </ul>
-                <ul class="nav nav-treeview">
-                  <li class="nav-item">
-                    <a href="Invoice.php" class="nav-link active">
-                      <i class="nav-icon bi bi-circle"></i>
-                      <p>Invoice</p>
-                    </a>
-                  </li>
-                </ul>
-              </li>
-            </ul>
-            <!--end::Sidebar Menu-->
-          </nav>
-        </div>
-        <!--end::Sidebar Wrapper-->
-      </aside>
+      <!-- Sidebar -->
+  <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
+    <div class="sidebar-brand">
+      <a href="index.php" class="brand-link"><span class="brand-text fw-light">Wevelope</span></a>
+    </div>
+    <div class="sidebar-wrapper">
+      <nav class="mt-2">
+        <ul class="nav sidebar-menu flex-column">
+          <li class="nav-item"><a href="index.php" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>Home</p></a></li>
+          <li class="nav-item"><a href="items.php" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>Items</p></a></li>
+          <li class="nav-item"><a href="customers.php" class="nav-link active"><i class="nav-icon bi bi-circle"></i><p>Customers</p></a></li>
+          <li class="nav-item"><a href="suppliers.php" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>Suppliers</p></a></li>
+          <li class="nav-item"><a href="item_customer.php" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>Item Customer</p></a></li>
+          <li class="nav-item"><a href="invoice.php" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>Invoice</p></a></li>
+        </ul>
+      </nav>
+    </div>
+  </aside>
       <!--end::Sidebar-->
       <!--begin::App Main-->
       <main class="app-main">
@@ -184,7 +131,7 @@
       <div class="col-sm-6"><h3 class="mb-0">Dashboard</h3></div>
       <div class="col-sm-6">
         <ol class="breadcrumb float-sm-end">
-          <li class="breadcrumb-item"><a href="index3.html">Home</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Home</a></li>
           <li class="breadcrumb-item"><a href="customers.php">Customers</a></li>
           <li class="breadcrumb-item active" aria-current="page"></li>
         </ol>
@@ -192,174 +139,143 @@
     </div>
     <!--end::Row-->
 
-    <!-- TABEL ITEMS -->
+    <!-- Search Card -->
     <div class="row">
       <div class="col-lg-12">
         <div class="card mb-4">
-          <div class="card-header border-0">
-            <h3 class="card-title">Items</h3>
+          <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+              <h3 class="card-title">Customers</h3>
+            </div>
           </div>
-          <div class="card-body table-responsive p-0">
-            <table class="table table-striped align-middle">
-              <thead>
-                <tr>
-                  <th>REF_NO</th>
-                  <th>NAME</th>
-                  <th>ACTION</th>
-                </tr>
-              </thead>
-              <tbody>
-              <?php
-include 'db.php';
+          <div class="card-body">
+            <?php if (isset($_GET['status'])): ?>
+              <div class="alert alert-<?= $_GET['status'] == 'duplicate' ? 'danger' : 'success' ?> alert-dismissible fade show mb-3">
+                <?php
+                switch ($_GET['status']) {
+                  case 'added':
+                    echo 'Customer berhasil ditambahkan.';
+                    break;
+                  case 'updated':
+                    echo 'Customer berhasil diperbarui.';
+                    break;
+                  case 'deleted':
+                    echo 'Customer berhasil dihapus.';
+                    break;
+                  case 'duplicate':
+                    echo 'REF_NO sudah digunakan. Gunakan yang lain.';
+                    break;
+                }
+                ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            <?php endif; ?>
 
-define('BASE_URL', '/Main/'); // Ganti sesuai folder kamu
-
-// Ambil customer untuk edit (jika ada)
-$edit_customer = null;
-if (isset($_GET['edit_id'])) {
-  $edit_id = intval($_GET['edit_id']);
-  $stmt = $conn->prepare("SELECT * FROM customers WHERE id = ?");
-  $stmt->bind_param("i", $edit_id);
-  $stmt->execute();
-  $result = $stmt->get_result();
-  $edit_customer = $result->fetch_assoc();
-  $stmt->close();
-}
-
-$keyword = isset($_GET['search']) ? trim($_GET['search']) : '';
-
-if ($keyword !== '') {
-  $stmt = $conn->prepare("SELECT * FROM customers WHERE name LIKE ? OR ref_no LIKE ? ORDER BY id ASC");
-  $like_keyword = '%' . $keyword . '%';
-  $stmt->bind_param("ss", $like_keyword, $like_keyword);
-  $stmt->execute();
-  $result = $stmt->get_result();
-} else {
-  $result = $conn->query("SELECT * FROM customers ORDER BY id ASC");
-}
-
-$customers = [];
-while ($row = $result->fetch_assoc()) {
-  $customers[] = $row;
-}
-
-?>
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Customers Table</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="p-4">
-
-<?php if (isset($_GET['status'])): ?>
-  <div class="alert alert-<?= $_GET['status'] == 'duplicate' ? 'danger' : 'success' ?> alert-dismissible fade show" role="alert">
-    <?php
-    switch ($_GET['status']) {
-      case 'added':
-        echo 'Customer berhasil ditambahkan.';
-        break;
-      case 'updated':
-        echo 'Customer berhasil diperbarui.';
-        break;
-      case 'deleted':
-        echo 'Customer berhasil dihapus.';
-        break;
-      case 'duplicate':
-        echo 'REF_NO sudah digunakan. Gunakan yang lain.';
-        break;
-    }
-    ?>
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-  </div>
-<?php endif; ?>
-
-<form method="GET" class="mb-3">
-  <div class="input-group">
-    <input type="text" name="search" class="form-control" placeholder="Cari nama atau ref no..." value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
-    <button class="btn btn-primary" type="submit">Search</button>
-    <a href="<?= BASE_URL ?>Customers.php" class="btn btn-secondary">Reset</a>
-  </div>
-</form>
-
-<div class="container">
-  <h2 class="mb-4"><?= $edit_customer ? 'Edit Customer' : 'Tambah Customer' ?></h2>
-
-  <form method="post" action="controllers/CustomersController.php">
-    <input type="hidden" name="id" value="<?= $edit_customer['id'] ?? '' ?>">
-    <div class="mb-3">
-      <input type="text" name="ref_no" class="form-control mb-2" placeholder="REF_NO" required
-             value="<?= $edit_customer['ref_no'] ?? '' ?>">
-      <input type="text" name="name" class="form-control mb-2" placeholder="NAME" required
-             value="<?= $edit_customer['name'] ?? '' ?>">
-      <button type="submit" name="<?= $edit_customer ? 'update_customer' : 'add_customer' ?>" class="btn btn-<?= $edit_customer ? 'success' : 'primary' ?>">
-        <?= $edit_customer ? 'Update' : 'Tambah' ?>
-      </button>
-      <?php if ($edit_customer): ?>
-        <a href="<?= BASE_URL ?>customers.php" class="btn btn-secondary ms-2">Batal</a>
-      <?php endif; ?>
-    </div>
-  </form>
-
-  <tbody>
-  <?php foreach ($customers as $customer): ?>
-    <tr>
-      <td><?= htmlspecialchars($customer['ref_no']) ?></td>
-      <td><?= htmlspecialchars($customer['name']) ?></td>
-      <td>
-  <a href="customers.php?edit_id=<?= $customer['id'] ?>" class="btn btn-sm btn-warning me-1">Edit</a>
-  <a href="controllers/CustomersController.php?delete_customer=<?= $customer['id'] ?>"
-     class="btn btn-sm btn-danger"
-     onclick="return confirm('Yakin ingin menghapus customer ini?')">Delete</a>
-</td>
-
-    </tr>
-  <?php endforeach; ?>
-</tbody>
-
-      </table>
-    </div>
-  </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-</body>
-</html>
-
-              </tbody>
-            </table>
+            <form method="GET" class="row g-3">
+              <div class="col-md-8">
+                <input type="text" name="search" class="form-control" 
+                       placeholder="Cari berdasarkan nama atau ref no..." 
+                       value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
+              </div>
+              <div class="col-md-4">
+                <button type="submit" class="btn btn-primary me-2">
+                  <i class="bi bi-search"></i> Search
+                </button>
+                <a href="customers.php" class="btn btn-secondary">
+                  <i class="bi bi-arrow-clockwise"></i> Reset
+                </a>
+              </div>
+            </form>
           </div>
         </div>
       </div>
     </div>
-    <!-- END TABEL ITEMS -->
-    
+
+    <!-- Customers Table -->
+<div class="row">
+  <div class="col-lg-12">
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-start align-items-center">
+        <h1 class="card-title mx-4"><b>Tabel Customers</b></h1>
+        <a href="Customers_form.php" class="btn btn-success float-end">
+          <i class="fas fa-plus me-0"></i> Tambah Items
+        </a>
+      </div>
+      <div class="card-body">
+        <table class="table table-bordered">
+          <thead>
+            <tr class="align-middle">
+              <th style="width: 10px">#</th>
+              <th>REF_NO</th>
+              <th>NAME</th>
+              <th style="width: 170px">ACTION</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php
+            include 'db.php';
+
+            $keyword = isset($_GET['search']) ? trim($_GET['search']) : '';
+
+            if ($keyword !== '') {
+              $stmt = $conn->prepare("SELECT * FROM customers WHERE name LIKE ? OR ref_no LIKE ? ORDER BY id ASC");
+              $like_keyword = '%' . $keyword . '%';
+              $stmt->bind_param("ss", $like_keyword, $like_keyword);
+              $stmt->execute();
+              $result = $stmt->get_result();
+            } else {
+              $result = $conn->query("SELECT * FROM customers ORDER BY id ASC");
+            }
+
+            if ($result->num_rows === 0): ?>
+              <tr class="align-middle">
+                <td colspan="4" class="text-center">Tidak ada data customer</td>
+              </tr>
+            <?php else: 
+              $counter = 1;
+              while ($customer = $result->fetch_assoc()): ?>
+                <tr class="align-middle">
+                  <td><?= $counter++ ?></td>
+                  <td><?= htmlspecialchars($customer['ref_no']) ?></td>
+                  <td><?= htmlspecialchars($customer['name']) ?></td>
+                  <td>
+                    <div class="d-flex gap-2">
+                      <a href="Customers_form.php?edit_id=<?= $customer['id'] ?>" class="btn btn-sm btn-warning">
+                        <i class="bi bi-pencil"></i> Edit
+                      </a>
+                      <a href="controllers/CustomersController.php?delete_customer=<?= $customer['id'] ?>"
+                        class="btn btn-sm btn-danger"
+                        onclick="return confirm('Yakin ingin menghapus customer ini?')">
+                        <i class="bi bi-trash"></i> Delete
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+              <?php endwhile;
+            endif; ?>
+          </tbody>
+        </table>
+      </div>
+      <!-- /.card-body -->
+      <div class="card-footer clearfix">
+        <ul class="pagination pagination-sm m-0 float-end">
+          <li class="page-item"><a class="page-link" href="#">«</a></li>
+          <li class="page-item"><a class="page-link" href="#">1</a></li>
+          <li class="page-item"><a class="page-link" href="#">2</a></li>
+          <li class="page-item"><a class="page-link" href="#">3</a></li>
+          <li class="page-item"><a class="page-link" href="#">»</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
   </div>
   <!--end::Container-->
 </div>
 <!--end::App Content Header-->
 
-        
-        
       </main>
       <!--end::App Main-->
-      <!--begin::Footer-->
-      <footer class="app-footer">
-        <!--begin::To the end-->
-        <div class="float-end d-none d-sm-inline">This is the homepage</div>
-        <!--end::To the end-->
-        <!--begin::Copyright-->
-        <strong>
-          Copyright &copy; 2014-2024&nbsp;
-          <a href="https://adminlte.io" class="text-decoration-none">AdminLTE.io</a>.
-        </strong>
-        All rights reserved.
-        <!--end::Copyright-->
-      </footer>
-      <!--end::Footer-->
     </div>
     <!--end::App Wrapper-->
     <!--begin::Script-->

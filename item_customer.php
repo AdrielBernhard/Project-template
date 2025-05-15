@@ -60,14 +60,23 @@
         <!--begin::Container-->
         <div class="container-fluid">
           <!--begin::Start Navbar Links-->
-          <ul class="navbar-nav">
-          <a href="index3.html" class="nav-link"><i></i> Home</a></li>
-          <li class="nav-item"><a href="items.php" class="nav-link"><i></i> Items</a></li>
-          <li class="nav-item"><a href="customers.php" class="nav-link"><i></i> Customers</a></li>
-          <li class="nav-item"><a href="suppliers.php" class="nav-link"><i></i> Suppliers</a></li>
-          <li class="nav-item"><a href="item_customer.php" class="nav-link"><i></i> Item Customer</a></li>
-          <li class="nav-item"><a href="invoice.php" class="nav-link active"><i></i> Invoice</a></li>
-          </ul>
+          <nav class="app-header navbar navbar-expand bg-body">
+        <div class="container-fluid">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" data-lte-toggle="sidebar" href="#" role="button">
+                        <i class="bi bi-list"></i>
+                    </a>
+                </li>
+                <li class="nav-item d-none d-md-block"><a href="index.php" class="nav-link">Home</a></li>
+                <li class="nav-item"><a href="items.php" class="nav-link">Items</a></li>
+                <li class="nav-item"><a href="customers.php" class="nav-link">Customers</a></li>
+                <li class="nav-item"><a href="suppliers.php" class="nav-link">Suppliers</a></li>
+                <li class="nav-item"><a href="item_customer.php" class="nav-link">Item Customer</a></li>
+                <li class="nav-item"><a href="invoice.php" class="nav-link active">Invoice</a></li>
+            </ul>
+        </div>
+    </nav>
           <!--end::Start Navbar Links-->
           <!--begin::End Navbar Links-->
           <ul class="navbar-nav ms-auto">
@@ -94,84 +103,24 @@
       </nav>
       <!--end::Header-->
       <!--begin::Sidebar-->
-      <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
-        <!--begin::Sidebar Brand-->
-        <div class="sidebar-brand">
-          <!--begin::Brand Link-->
-          <a href="./index.html" class="brand-link">
-            <!--begin::Brand Text-->
-            <span class="brand-text fw-light"><a href="index3.html">Wevelope</a></span>
-            <!--end::Brand Text-->
-          </a>
-          <!--end::Brand Link-->
-        </div>
-        <!--end::Sidebar Brand-->
-        <!--begin::Sidebar Wrapper-->
-        <div class="sidebar-wrapper">
-          <nav class="mt-2">
-            <!--begin::Sidebar Menu-->
-            <ul
-              class="nav sidebar-menu flex-column"
-              data-lte-toggle="treeview"
-              role="menu"
-              data-accordion="false"
-            >
-              <li class="nav-item menu-open">
-                <ul class="nav nav-treeview">
-                  <li class="nav-item">
-                    <a href="./index3.html" class="nav-link active">
-                      <i class="nav-icon bi bi-circle"></i>
-                      <p>Home</p>
-                    </a>
-                  </li>
-                </ul>
-                <ul class="nav nav-treeview">
-                  <li class="nav-item">
-                    <a href="items.php" class="nav-link active">
-                      <i class="nav-icon bi bi-circle"></i>
-                      <p>Items</p>
-                    </a>
-                  </li>
-                </ul>
-                <ul class="nav nav-treeview">
-                  <li class="nav-item">
-                    <a href="customers.php" class="nav-link active">
-                      <i class="nav-icon bi bi-circle"></i>
-                      <p>Customers</p>
-                    </a>
-                  </li>
-                </ul>
-                <ul class="nav nav-treeview">
-                  <li class="nav-item">
-                    <a href="Suppliers.php" class="nav-link active">
-                      <i class="nav-icon bi bi-circle"></i>
-                      <p>Suppliers</p>
-                    </a>
-                  </li>
-                </ul>
-                <ul class="nav nav-treeview">
-                  <li class="nav-item">
-                    <a href="item_customer.php" class="nav-link active">
-                      <i class="nav-icon bi bi-circle"></i>
-                      <p>item_customer</p>
-                    </a>
-                  </li>
-                </ul>
-                <ul class="nav nav-treeview">
-                  <li class="nav-item">
-                    <a href="Invoice.php" class="nav-link active">
-                      <i class="nav-icon bi bi-circle"></i>
-                      <p>Invoice</p>
-                    </a>
-                  </li>
-                </ul>
-              </li>
-            </ul>
-            <!--end::Sidebar Menu-->
-          </nav>
-        </div>
-        <!--end::Sidebar Wrapper-->
-      </aside>
+      <!-- Sidebar -->
+  <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
+    <div class="sidebar-brand">
+      <a href="index.php" class="brand-link"><span class="brand-text fw-light">Wevelope</span></a>
+    </div>
+    <div class="sidebar-wrapper"> 
+      <nav class="mt-2">
+        <ul class="nav sidebar-menu flex-column">
+          <li class="nav-item"><a href="index.php" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>Home</p></a></li>
+          <li class="nav-item"><a href="items.php" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>Items</p></a></li>
+          <li class="nav-item"><a href="customers.php" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>Customers</p></a></li>
+          <li class="nav-item"><a href="suppliers.php" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>Suppliers</p></a></li>
+          <li class="nav-item"><a href="item_customer.php" class="nav-link active"><i class="nav-icon bi bi-circle"></i><p>Item Customer</p></a></li>
+          <li class="nav-item"><a href="invoice.php" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>Invoice</p></a></li>
+        </ul>
+      </nav>
+    </div>
+  </aside>
       <!--end::Sidebar-->
       <!--begin::App Main-->
       <main class="app-main">
@@ -184,7 +133,7 @@
       <div class="col-sm-6"><h3 class="mb-0">Dashboard</h3></div>
       <div class="col-sm-6">
         <ol class="breadcrumb float-sm-end">
-          <li class="breadcrumb-item"><a href="index3.html">Home</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Home</a></li>
           <li class="breadcrumb-item"><a href="item_customer.php">Item_Customer</a></li>
           <li class="breadcrumb-item active" aria-current="page"></li>
         </ol>
@@ -337,7 +286,7 @@
                     <td><?= $row['id'] ?></td>
                     <td><?= htmlspecialchars($row['item_name']) ?></td>
                     <td><?= htmlspecialchars($row['customer_name']) ?></td>
-                    <td><?= number_format($row['harga']) ?></td>
+                    <td>Rp. <?= number_format($row['harga'], 0, ',', '.') ?></td>
                     <td>
                       <a href="item_customer.php?edit_id=<?= $row['id'] ?>" class="btn btn-sm btn-warning">Edit</a>
                       <a href="controllers/ItemCustomerController.php?delete=<?= $row['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Yakin ingin menghapus?')">Hapus</a>

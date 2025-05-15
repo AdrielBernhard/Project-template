@@ -1,17 +1,17 @@
 <?php
-include '../db.php';
+include __DIR__ . '/../db.php';
 
-// Tampilkan semua error (debug)
+// Enable error reporting for debugging
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Tambah customer
+// Add customer
 if (isset($_POST['add_customer'])) {
     $ref_no = trim($_POST['ref_no']);
     $name = trim($_POST['name']);
 
-    // Cek duplikat ref_no
+    // Check for duplicate ref_no
     $stmt = $conn->prepare("SELECT id FROM customers WHERE ref_no = ?");
     $stmt->bind_param("s", $ref_no);
     $stmt->execute();
@@ -27,10 +27,12 @@ if (isset($_POST['add_customer'])) {
     // Insert data
     $stmt = $conn->prepare("INSERT INTO customers (ref_no, name) VALUES (?, ?)");
     $stmt->bind_param("ss", $ref_no, $name);
-    $stmt->execute();
-    $stmt->close();
-
-    header("Location: ../customers.php?status=added");
+    
+    if ($stmt->execute()) {
+        header("Location: ../customers.php?status=added");
+    } else {
+        header("Location: ../customers.php?status=error");
+    }
     exit();
 }
 
@@ -40,14 +42,14 @@ if (isset($_POST['update_customer'])) {
     $ref_no = trim($_POST['ref_no']);
     $name = trim($_POST['name']);
 
-    // Cek duplikat ref_no untuk selain ID ini
+    // Check for duplicate ref_no excluding current ID
     $stmt = $conn->prepare("SELECT id FROM customers WHERE ref_no = ? AND id != ?");
     $stmt->bind_param("si", $ref_no, $id);
     $stmt->execute();
     $stmt->store_result();
 
     if ($stmt->num_rows > 0) {
-        header("Location: ../customers.php?status=duplicate&edit_id=$id");
+        header("Location: ../Customers_form.php?edit_id=$id&status=duplicate");
         exit();
     }
 
@@ -56,10 +58,12 @@ if (isset($_POST['update_customer'])) {
     // Update data
     $stmt = $conn->prepare("UPDATE customers SET ref_no = ?, name = ? WHERE id = ?");
     $stmt->bind_param("ssi", $ref_no, $name, $id);
-    $stmt->execute();
-    $stmt->close();
-
-    header("Location: ../customers.php?status=updated");
+    
+    if ($stmt->execute()) {
+        header("Location: ../customers.php?status=updated");
+    } else {
+        header("Location: ../Customers_form.php?edit_id=$id&status=error");
+    }
     exit();
 }
 
@@ -69,10 +73,12 @@ if (isset($_GET['delete_customer'])) {
 
     $stmt = $conn->prepare("DELETE FROM customers WHERE id = ?");
     $stmt->bind_param("i", $id);
-    $stmt->execute();
-    $stmt->close();
-
-    header("Location: ../customers.php?status=deleted");
+    
+    if ($stmt->execute()) {
+        header("Location: ../customers.php?status=deleted");
+    } else {
+        header("Location: ../customers.php?status=error");
+    }
     exit();
 }
 ?>

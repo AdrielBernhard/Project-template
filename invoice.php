@@ -37,35 +37,96 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     exit;
 }
 
+// Aktifkan error reporting saat pengembangan
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 // Handle delete
 if (isset($_GET['delete'])) {
     $delete_id = intval($_GET['delete']);
-    $stmt = $conn->prepare("DELETE FROM invoice WHERE id = ?");
+
+    // Hapus detail invoice terlebih dahulu
+    $stmt = $conn->prepare("DELETE FROM invoice_detail WHERE invoice_id = ?");
+    if (!$stmt) {
+        die("Prepare gagal (invoice_detail): " . $conn->error);
+    }
     $stmt->bind_param("i", $delete_id);
-    $stmt->execute();
+    if (!$stmt->execute()) {
+        die("Eksekusi gagal (invoice_detail): " . $stmt->error);
+    }
     $stmt->close();
+
+    // Hapus invoice
+    $stmt = $conn->prepare("DELETE FROM invoice WHERE id = ?");
+    if (!$stmt) {
+        die("Prepare gagal (invoice): " . $conn->error);
+    }
+    $stmt->bind_param("i", $delete_id);
+    if (!$stmt->execute()) {
+        die("Eksekusi gagal (invoice): " . $stmt->error);
+    }
+    $stmt->close();
+
+    // Redirect setelah sukses
     header("Location: invoice.php?success=delete");
     exit;
 }
 
 $search = $_GET['search'] ?? '';
 
+// Ambil semua parameter pencarian
+$search = $_GET['search'] ?? '';
+$customer_id = $_GET['customer_id'] ?? '';
+$date_from = $_GET['date_from'] ?? '';
+$date_to = $_GET['date_to'] ?? '';
+
+// Buat query dasar
+$query = "SELECT invoice.*, customers.name AS customer_name 
+          FROM invoice 
+          JOIN customers ON invoice.customer_id = customers.id 
+          WHERE 1=1";
+
+$params = [];
+$types = '';
+
+// Tambahkan kondisi jika ada input
 if (!empty($search)) {
-    $like = '%' . $conn->real_escape_string($search) . '%';
-    $stmt = $conn->prepare("SELECT invoice.*, customers.name AS customer_name 
-                            FROM invoice 
-                            JOIN customers ON invoice.customer_id = customers.id 
-                            WHERE invoice.invoice_name LIKE ? OR customers.name LIKE ?
-                            ORDER BY invoice.id DESC");
-    $stmt->bind_param("ss", $like, $like);
-    $stmt->execute();
-    $invoices = $stmt->get_result();
-} else {
-    $invoices = mysqli_query($conn, "SELECT invoice.*, customers.name AS customer_name 
-                                     FROM invoice 
-                                     JOIN customers ON invoice.customer_id = customers.id 
-                                     ORDER BY invoice.id DESC");
+    $query .= " AND (invoice.invoice_name LIKE ? OR customers.name LIKE ?)";
+    $params[] = '%' . $search . '%';
+    $params[] = '%' . $search . '%';
+    $types .= 'ss';
 }
+
+if (!empty($customer_id)) {
+    $query .= " AND invoice.customer_id = ?";
+    $params[] = $customer_id;
+    $types .= 'i';
+}
+
+if (!empty($date_from)) {
+    $query .= " AND invoice.tanggal >= ?";
+    $params[] = $date_from;
+    $types .= 's';
+}
+
+if (!empty($date_to)) {
+    $query .= " AND invoice.tanggal <= ?";
+    $params[] = $date_to;
+    $types .= 's';
+}
+
+$query .= " ORDER BY invoice.id DESC";
+
+$stmt = $conn->prepare($query);
+
+// Binding jika ada parameter
+if (!empty($params)) {
+    $stmt->bind_param($types, ...$params);
+}
+
+$stmt->execute();
+$invoices = $stmt->get_result();
+
 
 // Ambil data customer untuk form
 $customers = mysqli_query($conn, "SELECT * FROM customers");
@@ -105,7 +166,7 @@ if (isset($_GET['edit'])) {
                         <i class="bi bi-list"></i>
                     </a>
                 </li>
-                <li class="nav-item d-none d-md-block"><a href="index3.html" class="nav-link">Home</a></li>
+                <li class="nav-item d-none d-md-block"><a href="index.php" class="nav-link">Home</a></li>
                 <li class="nav-item"><a href="items.php" class="nav-link">Items</a></li>
                 <li class="nav-item"><a href="customers.php" class="nav-link">Customers</a></li>
                 <li class="nav-item"><a href="suppliers.php" class="nav-link">Suppliers</a></li>
@@ -124,78 +185,23 @@ if (isset($_GET['edit'])) {
     </nav>
 
     <!-- Sidebar -->
-    <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
-        <div class="sidebar-brand">
-            <a href="index3.html" class="brand-link">
-                <span class="brand-text fw-light">Wevelope</span>
-            </a>
-        </div>
-        <div class="sidebar-wrapper">
-            <nav class="mt-2">
-                <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="menu" data-accordion="false">
-                    <li class="nav-item menu-open">
-                    <ul
-              class="nav sidebar-menu flex-column"
-              data-lte-toggle="treeview"
-              role="menu"
-              data-accordion="false"
-            >
-              <li class="nav-item menu-open">
-                <ul class="nav nav-treeview">
-                  <li class="nav-item">
-                    <a href="./index3.html" class="nav-link active">
-                      <i class="nav-icon bi bi-circle"></i>
-                      <p>Home</p>
-                    </a>
-                  </li>
-                </ul>
-                <ul class="nav nav-treeview">
-                  <li class="nav-item">
-                    <a href="items.php" class="nav-link active">
-                      <i class="nav-icon bi bi-circle"></i>
-                      <p>Items</p>
-                    </a>
-                  </li>
-                </ul>
-                <ul class="nav nav-treeview">
-                  <li class="nav-item">
-                    <a href="customers.php" class="nav-link active">
-                      <i class="nav-icon bi bi-circle"></i>
-                      <p>Customers</p>
-                    </a>
-                  </li>
-                </ul>
-                <ul class="nav nav-treeview">
-                  <li class="nav-item">
-                    <a href="Suppliers.php" class="nav-link active">
-                      <i class="nav-icon bi bi-circle"></i>
-                      <p>Suppliers</p>
-                    </a>
-                  </li>
-                </ul>
-                <ul class="nav nav-treeview">
-                  <li class="nav-item">
-                    <a href="item_customer.php" class="nav-link active">
-                      <i class="nav-icon bi bi-circle"></i>
-                      <p>item_customer</p>
-                    </a>
-                  </li>
-                </ul>
-                <ul class="nav nav-treeview">
-                  <li class="nav-item">
-                    <a href="Invoice.php" class="nav-link active">
-                      <i class="nav-icon bi bi-circle"></i>
-                      <p>Invoice</p>
-                    </a>
-                  </li>
-                </ul>
-              </li>
-            </ul>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-    </aside>
+  <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
+    <div class="sidebar-brand">
+      <a href="index.php" class="brand-link"><span class="brand-text fw-light">Wevelope</span></a>
+    </div>
+    <div class="sidebar-wrapper">
+      <nav class="mt-2">
+        <ul class="nav sidebar-menu flex-column">
+          <li class="nav-item"><a href="index.php" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>Home</p></a></li>
+          <li class="nav-item"><a href="items.php" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>Items</p></a></li>
+          <li class="nav-item"><a href="customers.php" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>Customers</p></a></li>
+          <li class="nav-item"><a href="suppliers.php" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>Suppliers</p></a></li>
+          <li class="nav-item"><a href="item_customer.php" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>Item Customer</p></a></li>
+          <li class="nav-item"><a href="invoice.php" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>Invoice</p></a></li>
+        </ul>
+      </nav>
+    </div>
+  </aside>
 
     <!-- Main Content -->
     <main class="app-main">
@@ -205,8 +211,8 @@ if (isset($_GET['edit'])) {
                     <div class="col-sm-6"><h3 class="mb-0">Invoice</h3></div>
                     <div class="col-sm-6">
                         <ol class="breadcrumb float-sm-end">
-                            <li class="breadcrumb-item"><a href="index3.html">Home</a></li>
-                            <li class="breadcrumb-item active">Invoice</li>
+                            <li class="breadcrumb-item"><a href="index.php">Home</a></li>
+                            <li class="breadcrumb-item active"><a href="invoice.php">Invoice</a></li>
                         </ol>
                     </div>
                 </div>
@@ -231,14 +237,39 @@ if (isset($_GET['edit'])) {
                 <?php endif; ?>
 
                 <!-- Form Pencarian Invoice -->
-<form method="GET" class="mb-3">
-  <div class="input-group">
-    <input type="text" name="search" class="form-control" placeholder="Cari nama invoice atau customer..." value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
-    <button class="btn btn-primary" type="submit">Search</button>
+                <form method="GET" class="row g-3 mb-3 align-items-end">
+  <div class="col-md-3">
+    <input type="text" name="search" class="form-control" placeholder="Kata kunci..." value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
+  </div>
+
+  <div class="col-md-3">
+    <select name="customer_id" class="form-control">
+      <option value="">Pilih Customer</option>
+      <?php mysqli_data_seek($customers, 0); while ($c = mysqli_fetch_assoc($customers)) : ?>
+        <option value="<?= $c['id'] ?>" <?= (isset($_GET['customer_id']) && $_GET['customer_id'] == $c['id']) ? 'selected' : '' ?>>
+          <?= htmlspecialchars($c['name']) ?>
+        </option>
+      <?php endwhile; ?>
+    </select>
+  </div>
+
+  <div class="col-md-2">
+    <input type="date" name="date_from" class="form-control" value="<?= htmlspecialchars($_GET['date_from'] ?? '') ?>">
+  </div>
+
+  <div class="col-auto d-flex align-items-center">
+    <span>sampai</span>
+  </div>
+
+  <div class="col-md-2">
+    <input type="date" name="date_to" class="form-control" value="<?= htmlspecialchars($_GET['date_to'] ?? '') ?>">
+  </div>
+
+  <div class="col-md-2 d-flex">
+    <button class="btn btn-primary me-2" type="submit">Search</button>
     <a href="invoice.php" class="btn btn-secondary">Reset</a>
   </div>
 </form>
-
                 <!-- Form Tambah / Edit Invoice -->
                 <div class="card mb-4">
                     <div class="card-header">

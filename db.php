@@ -1,13 +1,14 @@
 <?php
-$host = "localhost";      // atau IP address database server
-$user = "root";           // username MySQL
-$password = "";           // password MySQL
-$database = "inventory";  // ganti dengan nama database kamu
+require_once 'env.php';
+$host = DB_HOST;
+$user = DB_USER;
+$password = DB_PASS;
+$database = DB_NAME;
 
 // Buat koneksi
 $conn = mysqli_connect($host, $user, $password, $database);
 
-// Cek koneksi
+// Cek koneksi  
 if (!$conn) {
     die("Koneksi gagal: " . mysqli_connect_error());
 }
