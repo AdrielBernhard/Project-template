@@ -1,9 +1,15 @@
 <?php
+session_start(); // Pastikan session_start() ada di paling atas
 include 'db.php';
 
-$edit_item = null;
+// Ambil data dari session jika ada (untuk kasus error)
+$form_data = $_SESSION['form_data'] ?? null;
+if ($form_data) {
+    unset($_SESSION['form_data']); // Hapus data session setelah digunakan
+}
 
 // Check if we're editing an existing item
+$edit_item = null;
 if (isset($_GET['edit_id'])) {
     $edit_id = intval($_GET['edit_id']);
     $stmt = $conn->prepare("SELECT * FROM items WHERE id = ?");
@@ -14,7 +20,10 @@ if (isset($_GET['edit_id'])) {
     $stmt->close();
 }
 
-$page_title = $edit_item ? 'Edit Item' : 'Tambah Item';
+// Prioritaskan data dari session (jika ada error), lalu data edit
+$item_data = $form_data ?: $edit_item ?: null;
+
+$page_title = isset($edit_item) ? 'Edit Item' : 'Tambah Item';
 ?>
 
 <!doctype html>
@@ -83,7 +92,7 @@ $page_title = $edit_item ? 'Edit Item' : 'Tambah Item';
                 <ol class="breadcrumb float-sm-end">
                   <li class="breadcrumb-item"><a href="index.php">Home</a></li>
                   <li class="breadcrumb-item"><a href="Items.php">Items</a></li>
-                  <li class="breadcrumb-item active" aria-current="page"><a href="Items_form.php">Tamabah-Item</a></li>
+                  <li class="breadcrumb-item active" aria-current="page"><a href="Items_form.php">Form-Item</a></li>
                 </ol>
               </div>
             </div>
@@ -102,7 +111,7 @@ $page_title = $edit_item ? 'Edit Item' : 'Tambah Item';
                 <div class="col-md-15 mx-auto">
                 
                 <!-- Back button -->
-                <a href="Items.php" class="btn btn-secondary mb-0">
+                <a href="Items.php" class="btn btn-secondary mb-3">
                     <i class="fas fa-arrow-left"></i> Kembali
                 </a>
 
@@ -121,34 +130,34 @@ $page_title = $edit_item ? 'Edit Item' : 'Tambah Item';
                     </div>
                     <div class="card-body">
                         <form method="post" action="controllers/ItemController.php">
-                            <input type="hidden" name="id" value="<?= $edit_item['id'] ?? '' ?>">
+                            <input type="hidden" name="id" value="<?= htmlspecialchars($item_data['id'] ?? '') ?>">
                             
                             <div class="mb-3">
                                 <label for="ref_no" class="form-label">Ref_No</label>
                                 <input type="text" class="form-control" id="ref_no" name="ref_no" 
                                        placeholder="Reference Number" required
-                                       value="<?= htmlspecialchars($edit_item['ref_no'] ?? '') ?>">
+                                       value="<?= htmlspecialchars($item_data['ref_no'] ?? '') ?>">
                             </div>
                             
                             <div class="mb-3">
                                 <label for="name" class="form-label">Nama</label>
                                 <input type="text" class="form-control" id="name" name="name" 
                                        placeholder="Nama Item" required
-                                       value="<?= htmlspecialchars($edit_item['name'] ?? '') ?>">
+                                       value="<?= htmlspecialchars($item_data['name'] ?? '') ?>">
                             </div>
                             
                             <div class="mb-3">
                                 <label for="price" class="form-label">Harga</label>
                                 <input type="number" step="0.01" class="form-control" id="price" name="price" 
                                        placeholder="Harga" required
-                                       value="<?= htmlspecialchars($edit_item['price'] ?? '') ?>">
+                                       value="<?= htmlspecialchars($item_data['price'] ?? '') ?>">
                             </div>
                             
                             <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                                 <a href="Items.php" class="btn btn-secondary">Cancel</a>
-                                <button type="submit" name="<?= $edit_item ? 'update_item' : 'add_item' ?>" 
-                                        class="btn btn-<?= $edit_item ? 'success' : 'primary' ?> me-md-2">
-                                    <i class="fas fa-save"></i> <?= $edit_item ? 'Update' : 'Save' ?>
+                                <button type="submit" name="<?= isset($edit_item) ? 'update_item' : 'add_item' ?>" 
+                                        class="btn btn-<?= isset($edit_item) ? 'success' : 'primary' ?> me-md-2">
+                                    <i class="fas fa-save"></i> <?= isset($edit_item) ? 'Update' : 'Save' ?>
                                 </button>
                             </div>
                         </form>
@@ -179,48 +188,9 @@ $page_title = $edit_item ? 'Edit Item' : 'Tambah Item';
     </div>
     <!--end::App Wrapper-->
     <!--begin::Script-->
-    <!--begin::Third Party Plugin(OverlayScrollbars)-->
-    <script
-      src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.10.1/browser/overlayscrollbars.browser.es6.min.js"
-      integrity="sha256-dghWARbRe2eLlIJ56wNB+b760ywulqK3DzZYEpsg2fQ="
-      crossorigin="anonymous"
-    ></script>
-    <!--end::Third Party Plugin(OverlayScrollbars)--><!--begin::Required Plugin(popperjs for Bootstrap 5)-->
-    <script
-      src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
-      integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
-      crossorigin="anonymous"
-    ></script>
-    <!--end::Required Plugin(popperjs for Bootstrap 5)--><!--begin::Required Plugin(Bootstrap 5)-->
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
-      integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
-      crossorigin="anonymous"
-    ></script>
-    <!--end::Required Plugin(Bootstrap 5)--><!--begin::Required Plugin(AdminLTE)-->
-    <script src="../../../dist/js/adminlte.js"></script>
-    <!--end::Required Plugin(AdminLTE)--><!--begin::OverlayScrollbars Configure-->
-    <script>
-      const SELECTOR_SIDEBAR_WRAPPER = '.sidebar-wrapper';
-      const Default = {
-        scrollbarTheme: 'os-theme-light',
-        scrollbarAutoHide: 'leave',
-        scrollbarClickScroll: true,
-      };
-      document.addEventListener('DOMContentLoaded', function () {
-        const sidebarWrapper = document.querySelector(SELECTOR_SIDEBAR_WRAPPER);
-        if (sidebarWrapper && typeof OverlayScrollbarsGlobal?.OverlayScrollbars !== 'undefined') {
-          OverlayScrollbarsGlobal.OverlayScrollbars(sidebarWrapper, {
-            scrollbars: {
-              theme: Default.scrollbarTheme,
-              autoHide: Default.scrollbarAutoHide,
-              clickScroll: Default.scrollbarClickScroll,
-            },
-          });
-        }
-      });
-    </script>
-    <!--end::OverlayScrollbars Configure-->
+
+    <?php include 'script.php'; ?>
+    
     <!--end::Script-->
   </body>
   <!--end::Body-->

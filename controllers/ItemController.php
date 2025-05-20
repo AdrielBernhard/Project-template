@@ -1,6 +1,18 @@
 <?php
 include __DIR__ . '/../db.php';
 
+// Di bagian add_item:
+if ($check->num_rows > 0) {
+    header("Location: ../Items_form.php?status=duplicate&ref_no=".urlencode($ref_no)."&name=".urlencode($name)."&price=".urlencode($price));
+    exit;
+}
+
+// Di bagian update_item:
+if ($check->num_rows > 0) {
+    header("Location: ../Items_form.php?status=duplicate&edit_id=".$id."&ref_no=".urlencode($ref_no)."&name=".urlencode($name)."&price=".urlencode($price));
+    exit;
+}
+
 // Tambah item
 if (isset($_POST['add_item'])) {
   $ref_no = $_POST['ref_no'];

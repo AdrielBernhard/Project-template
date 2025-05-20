@@ -1,20 +1,31 @@
 <?php
 include 'db.php';
 
+// Ganti bagian ini:
 $edit_item = null;
 
-// Check if we're editing an existing item
-if (isset($_GET['edit_id'])) {
+// Dengan:
+$edit_item = [
+    'id' => isset($_GET['edit_id']) ? intval($_GET['edit_id']) : null,
+    'ref_no' => isset($_GET['ref_no']) ? $_GET['ref_no'] : (isset($edit_item['ref_no']) ? $edit_item['ref_no'] : ''),
+    'name' => isset($_GET['name']) ? $_GET['name'] : (isset($edit_item['name']) ? $edit_item['name'] : ''),
+    'price' => isset($_GET['price']) ? $_GET['price'] : (isset($edit_item['price']) ? $edit_item['price'] : '')
+];
+
+// Jika ada parameter edit_id dari URL, ambil data dari database
+if (isset($_GET['edit_id']) && !isset($_GET['ref_no'])) {
     $edit_id = intval($_GET['edit_id']);
     $stmt = $conn->prepare("SELECT * FROM items WHERE id = ?");
     $stmt->bind_param("i", $edit_id);
     $stmt->execute();
     $result = $stmt->get_result();
-    $edit_item = $result->fetch_assoc();
+    $db_item = $result->fetch_assoc();
     $stmt->close();
+    
+    if ($db_item) {
+        $edit_item = array_merge($edit_item, $db_item);
+    }
 }
-
-$page_title = $edit_item ? 'Edit Item' : 'Tambah Item';
 ?>
 
 <!doctype html>

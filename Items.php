@@ -103,7 +103,9 @@ while ($row = $result->fetch_assoc()) {
   <body class="layout-fixed sidebar-expand-lg sidebar-mini sidebar-collapse bg-body-tertiary">
     <!--begin::App Wrapper-->
     <div class="app-wrapper">
+
       <?php include 'sidebar-navbar.html'; ?>
+      
       <!--begin::App Main-->
       <main class="app-main">
         <!--begin::App Content Header-->
@@ -132,31 +134,8 @@ while ($row = $result->fetch_assoc()) {
             <!--begin::Row-->
             <div class="row">
               <div class="col-12">
-                <!-- Default box -->
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5>Search Items</h5>
-                    </div>
-                    <div class="card-body">
-                        <form method="GET" class="row g-3">
-                            <div class="col-md-8">
-                                <input type="text" name="search" class="form-control" 
-                                       placeholder="Search by name or reference number..." 
-                                       value="<?= htmlspecialchars($keyword) ?>">
-                            </div>
-                            <div class="col-md-4">
-                                <button type="submit" class="btn btn-primary me-2">
-                                    <i class="fas fa-search"></i> Search
-                                </button>
-                                <a href="Items.php" class="btn btn-secondary">
-                                    <i class="fas fa-sync-alt"></i> Reset
-                                </a>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Status Messages -->
+                
+                <!-- Status Messages -->  
                 <?php if (isset($_GET['status'])): ?>
                     <div class="alert alert-<?= $_GET['status'] == 'duplicate' ? 'danger' : 'success' ?> alert-dismissible fade show">
                         <?php
@@ -172,10 +151,34 @@ while ($row = $result->fetch_assoc()) {
                     </div>
                 <?php endif; ?>
 
+                <!-- Default box -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3 class="card-title">Search Items</h3>
+                    </div>
+                    <div class="card-body">
+                        <form method="GET" class="row g-3">
+                            <div class="col-md-8">
+                                <input type="text" name="search" class="form-control" 
+                                       placeholder="Cari berdasarkan nama atau ref no..." 
+                                       value="<?= htmlspecialchars($keyword) ?>">
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-primary me-2">
+                                    <i class="fas fa-search"></i> Search
+                                </button>
+                                <a href="Items.php" class="btn btn-secondary">
+                                    <i class="fas fa-sync-alt"></i> Reset
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
                 <!-- Items Table -->
                 <div class="card mb-4">
-                <div class="card-header d-flex justify-content-start align-items-center">
-                <h3 class="card-title mx-4"><b>Tabel Items</b></h3>
+                <div class="card-header d-flex align-items-center">
+                <h3 class="card-title me-4 mb-0">Tabel Items</h3>
                 <a href="Items_form.php" class="btn btn-success float-end">
                   <i class="fas fa-plus me-0"></i> Tambah Items
                 </a>
@@ -185,7 +188,7 @@ while ($row = $result->fetch_assoc()) {
             <thead>
                 <tr class="align-middle">
                     <th style="width: 10px">#</th>
-                    <th>Reference No</th>
+                    <th>Ref_No</th>
                     <th>Nama</th>
                     <th>Harga</th>
                     <th style="width: 170px">Aksi</th>
@@ -211,7 +214,7 @@ while ($row = $result->fetch_assoc()) {
                                     </a>
                                     <a href="controllers/ItemController.php?delete_item=<?= $item['id'] ?>" 
                                        class="btn btn-sm btn-danger" 
-                                       onclick="return confirm('Are you sure you want to delete this item?')">
+                                       onclick="return confirm('Yakin ingin menghapus customer ini?')">
                                         <i class="fas fa-trash-alt me-1"></i> Delete
                                     </a>
                                 </div>
@@ -256,48 +259,9 @@ while ($row = $result->fetch_assoc()) {
     </div>
     <!--end::App Wrapper-->
     <!--begin::Script-->
-    <!--begin::Third Party Plugin(OverlayScrollbars)-->
-    <script
-      src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.10.1/browser/overlayscrollbars.browser.es6.min.js"
-      integrity="sha256-dghWARbRe2eLlIJ56wNB+b760ywulqK3DzZYEpsg2fQ="
-      crossorigin="anonymous"
-    ></script>
-    <!--end::Third Party Plugin(OverlayScrollbars)--><!--begin::Required Plugin(popperjs for Bootstrap 5)-->
-    <script
-      src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
-      integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
-      crossorigin="anonymous"
-    ></script>
-    <!--end::Required Plugin(popperjs for Bootstrap 5)--><!--begin::Required Plugin(Bootstrap 5)-->
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
-      integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
-      crossorigin="anonymous"
-    ></script>
-    <!--end::Required Plugin(Bootstrap 5)--><!--begin::Required Plugin(AdminLTE)-->
-    <script src="../../../dist/js/adminlte.js"></script>
-    <!--end::Required Plugin(AdminLTE)--><!--begin::OverlayScrollbars Configure-->
-    <script>
-      const SELECTOR_SIDEBAR_WRAPPER = '.sidebar-wrapper';
-      const Default = {
-        scrollbarTheme: 'os-theme-light',
-        scrollbarAutoHide: 'leave',
-        scrollbarClickScroll: true,
-      };
-      document.addEventListener('DOMContentLoaded', function () {
-        const sidebarWrapper = document.querySelector(SELECTOR_SIDEBAR_WRAPPER);
-        if (sidebarWrapper && typeof OverlayScrollbarsGlobal?.OverlayScrollbars !== 'undefined') {
-          OverlayScrollbarsGlobal.OverlayScrollbars(sidebarWrapper, {
-            scrollbars: {
-              theme: Default.scrollbarTheme,
-              autoHide: Default.scrollbarAutoHide,
-              clickScroll: Default.scrollbarClickScroll,
-            },
-          });
-        }
-      });
-    </script>
-    <!--end::OverlayScrollbars Configure-->
+
+    <?php include 'script.php'; ?>
+    
     <!--end::Script-->
   </body>
   <!--end::Body-->
