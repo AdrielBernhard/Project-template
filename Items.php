@@ -1,6 +1,29 @@
 <?php
 include 'db.php';
 
+$limit = 10;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $limit;
+
+// Ambil data untuk ditampilkan
+$query = mysqli_query($conn, "SELECT * FROM items LIMIT $limit OFFSET $offset");
+
+// Cek error query data
+if (!$query) {
+    die("Query data error: " . mysqli_error($conn));
+}
+
+// Hitung total data untuk pagination
+$totalResult = mysqli_query($conn, "SELECT COUNT(*) AS total FROM items");
+
+// Cek error query total
+if (!$totalResult) {
+    die("Query total error: " . mysqli_error($conn));
+}
+
+$totalRow = mysqli_fetch_assoc($totalResult);
+$totalPage = ceil($totalRow['total'] / $limit);
+
 define('BASE_URL', '/Random/'); // Ubah sesuai nama folder kamu di localhost
 
 // Search functionality
@@ -182,59 +205,39 @@ while ($row = $result->fetch_assoc()) {
                 <a href="Items_form.php" class="btn btn-success float-end">
                   <i class="fas fa-plus me-0"></i> Tambah Items
                 </a>
-    </div>
-    <div class="card-body">
-        <table class="table table-bordered">
-            <thead>
-                <tr class="align-middle">
-                    <th style="width: 10px">#</th>
-                    <th>Ref_No</th>
-                    <th>Nama</th>
-                    <th>Harga</th>
-                    <th style="width: 170px">Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (empty($items)): ?>
-                    <tr class="align-middle">
-                        <td colspan="5" class="text-center">tidak ada item ysng ditemukan</td>
-                    </tr>
-                <?php else: ?>
-                    <?php foreach ($items as $index => $item): ?>
-                        <tr class="align-middle">
-                            <td><?= $index + 1 ?></td>
-                            <td><?= htmlspecialchars($item['ref_no']) ?></td>
-                            <td><?= htmlspecialchars($item['name']) ?></td>
-                            <td>Rp <?= number_format($item['price'], 0, ',', '.') ?></td>
-                            <td>
-                            <div class="d-flex gap-2">
-                                    <a href="Items_form.php?edit_id=<?= $item['id'] ?>" 
-                                       class="btn btn-sm btn-warning">
-                                        <i class="fas fa-edit me-1"></i> Edit
-                                    </a>
-                                    <a href="controllers/ItemController.php?delete_item=<?= $item['id'] ?>" 
-                                       class="btn btn-sm btn-danger" 
-                                       onclick="return confirm('Yakin ingin menghapus customer ini?')">
-                                        <i class="fas fa-trash-alt me-1"></i> Delete
-                                    </a>
-                                </div>
-                            </td>
+                </div>
+                <div class="card-body">
+                  <table class="table table-bordered">
+                    <thead>
+                      <tr>
+                        <th style="width: 10px" >No</th>
+                        <th>Ref No</th>
+                        <th>Nama</th>
+                        <th>Harga</th>
+                        <th style="width: 170px">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <?php $no = $offset + 1; ?>
+                      <?php while ($row = mysqli_fetch_assoc($query)) : ?>
+                        <tr>
+                          <td><?= $no++; ?></td>
+                          <td><?= $row['ref_no']; ?></td>
+                          <td><?= $row['name']; ?></td>
+                          <td><?= number_format($row['price']); ?></td>
+                          <td>
+                            <a href="edit_item.php?id=<?= $row['id']; ?>" class="btn btn-sm btn-warning">Edit</a>
+                            <a href="hapus_item.php?id=<?= $row['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Yakin ingin menghapus?')">Hapus</a>
+                          </td>
                         </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
-    <div class="card-footer clearfix">
-        <ul class="pagination pagination-sm m-0 float-end">
-            <li class="page-item"><a class="page-link" href="#">«</a></li>
-            <li class="page-item"><a class="page-link" href="#">1</a></li>
-            <li class="page-item"><a class="page-link" href="#">2</a></li>
-            <li class="page-item"><a class="page-link" href="#">3</a></li>
-            <li class="page-item"><a class="page-link" href="#">»</a></li>
-        </ul>
-    </div>
-</div>
+                      <?php endwhile; ?>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="card-footer clearfix">
+                  <?php include 'pagination.php'; ?>
+                </div>
+              </div>
                 <!-- /.card -->
               </div>
             </div>

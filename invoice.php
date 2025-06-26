@@ -1,87 +1,22 @@
 <?php
 include 'db.php';
 
-// Handle tambah/edit
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $id = $_POST['id'] ?? '';
-    $invoice_name = $_POST['invoice_name'];
-    $customer_id = $_POST['customer_id'];
-    $tanggal = $_POST['tanggal'];
+// Input validation and sanitization
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$customer_id = isset($_GET['customer_id']) ? (int)$_GET['customer_id'] : 0;
+$date_from = isset($_GET['date_from']) ? $_GET['date_from'] : '';
+$date_to = isset($_GET['date_to']) ? $_GET['date_to'] : '';
 
-    // Cek duplikat invoice_name saat insert
-    $stmt = $conn->prepare("SELECT id FROM invoice WHERE invoice_name = ?");
-    $stmt->bind_param("s", $invoice_name);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result->num_rows > 0 && !$id) {
-        // Jika duplikat dan ini insert (bukan update), redirect ke invoice.php dengan error
-        header("Location: invoice.php?error=duplicate");
-        exit;
-    }
-    $stmt->close();
-
-    if ($id) {
-        $stmt = $conn->prepare("UPDATE invoice SET invoice_name = ?, customer_id = ?, tanggal = ? WHERE id = ?");
-        $stmt->bind_param("sisi", $invoice_name, $customer_id, $tanggal, $id);
-        $stmt->execute();
-        $stmt->close();
-        header("Location: invoice.php?success=edit");
-    } else {
-        $stmt = $conn->prepare("INSERT INTO invoice (invoice_name, customer_id, tanggal) VALUES (?, ?, ?)");
-        $stmt->bind_param("sis", $invoice_name, $customer_id, $tanggal);
-        $stmt->execute();
-        $stmt->close();
-        header("Location: invoice.php?success=add");
-    }
-    exit;
+// Validate dates
+if (!empty($date_from) && !DateTime::createFromFormat('Y-m-d', $date_from)) {
+    $date_from = '';
+}
+if (!empty($date_to) && !DateTime::createFromFormat('Y-m-d', $date_to)) {
+    $date_to = '';
 }
 
-// Aktifkan error reporting saat pengembangan
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
-
-// Handle delete
-if (isset($_GET['delete'])) {
-    $delete_id = intval($_GET['delete']);
-
-    // Hapus detail invoice terlebih dahulu
-    $stmt = $conn->prepare("DELETE FROM invoice_detail WHERE invoice_id = ?");
-    if (!$stmt) {
-        die("Prepare gagal (invoice_detail): " . $conn->error);
-    }
-    $stmt->bind_param("i", $delete_id);
-    if (!$stmt->execute()) {
-        die("Eksekusi gagal (invoice_detail): " . $stmt->error);
-    }
-    $stmt->close();
-
-    // Hapus invoice
-    $stmt = $conn->prepare("DELETE FROM invoice WHERE id = ?");
-    if (!$stmt) {
-        die("Prepare gagal (invoice): " . $conn->error);
-    }
-    $stmt->bind_param("i", $delete_id);
-    if (!$stmt->execute()) {
-        die("Eksekusi gagal (invoice): " . $stmt->error);
-    }
-    $stmt->close();
-
-    // Redirect setelah sukses
-    header("Location: invoice.php?success=delete");
-    exit;
-}
-
-$search = $_GET['search'] ?? '';
-
-// Ambil semua parameter pencarian
-$search = $_GET['search'] ?? '';
-$customer_id = $_GET['customer_id'] ?? '';
-$date_from = $_GET['date_from'] ?? '';
-$date_to = $_GET['date_to'] ?? '';
-
-// Buat query dasar
-$query = "SELECT invoice.*, customers.name AS customer_name 
+// Base query with parameterized values
+$query = "SELECT invoice.*, customers.name AS customer_name, customers.ref_no AS customer_ref_no 
           FROM invoice 
           JOIN customers ON invoice.customer_id = customers.id 
           WHERE 1=1";
@@ -89,12 +24,14 @@ $query = "SELECT invoice.*, customers.name AS customer_name
 $params = [];
 $types = '';
 
-// Tambahkan kondisi jika ada input
+// Add search conditions
 if (!empty($search)) {
-    $query .= " AND (invoice.invoice_name LIKE ? OR customers.name LIKE ?)";
+    $query .= " AND (invoice.invoice_name LIKE ? OR customers.name LIKE ? OR invoice.tanggal LIKE ? OR invoice.due_date LIKE ?)";
     $params[] = '%' . $search . '%';
     $params[] = '%' . $search . '%';
-    $types .= 'ss';
+    $params[] = '%' . $search . '%';
+    $params[] = '%' . $search . '%';
+    $types .= 'ssss';
 }
 
 if (!empty($customer_id)) {
@@ -117,245 +54,272 @@ if (!empty($date_to)) {
 
 $query .= " ORDER BY invoice.id DESC";
 
-$stmt = $conn->prepare($query);
+// Pagination
+$per_page = 10;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $per_page;
 
-// Binding jika ada parameter
+$count_query = str_replace('SELECT invoice.*, customers.name AS customer_name, customers.ref_no AS customer_ref_no', 'SELECT COUNT(*) as total', $query);
+$count_stmt = $conn->prepare($count_query);
+if (!empty($params)) {
+    $count_stmt->bind_param($types, ...$params);
+}
+$count_stmt->execute();
+$total_rows = $count_stmt->get_result()->fetch_assoc()['total'];
+$total_pages = ceil($total_rows / $per_page);
+
+$query .= " LIMIT ? OFFSET ?";
+$params[] = $per_page;
+$params[] = $offset;
+$types .= 'ii';
+
+// Execute query
+$stmt = $conn->prepare($query);
 if (!empty($params)) {
     $stmt->bind_param($types, ...$params);
 }
-
 $stmt->execute();
 $invoices = $stmt->get_result();
 
+// Get customers for filter dropdown
+$customers = $conn->query("SELECT * FROM customers ORDER BY name");
 
-// Ambil data customer untuk form
-$customers = mysqli_query($conn, "SELECT * FROM customers");
-
-// Cek kalau ada edit
-$edit = null;
-if (isset($_GET['edit'])) {
-    $edit_id = intval($_GET['edit']);
-    $stmt = $conn->prepare("SELECT * FROM invoice WHERE id = ?");
-    $stmt->bind_param("i", $edit_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $edit = $result->fetch_assoc();
-    $stmt->close();
-}
+// Success messages
+$success_messages = [
+    'add' => 'Invoice berhasil ditambahkan',
+    'edit' => 'Invoice berhasil diperbarui',
+    'delete' => 'Invoice berhasil dihapus'
+];
 ?>
 
 <!doctype html>
 <html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <title>Invoice</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <!--begin::Head-->
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>AdminLTE 4 | Sidebar Mini</title>
+    <!--begin::Primary Meta Tags-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="title" content="AdminLTE 4 | Sidebar Mini" />
+    <meta name="author" content="ColorlibHQ" />
+    <meta
+      name="description"
+      content="AdminLTE is a Free Bootstrap 5 Admin Dashboard, 30 example pages using Vanilla JS."
+    />
+    <meta
+      name="keywords"
+      content="bootstrap 5, bootstrap, bootstrap 5 admin dashboard, bootstrap 5 dashboard, bootstrap 5 charts, bootstrap 5 calendar, bootstrap 5 datepicker, bootstrap 5 tables, bootstrap 5 datatable, vanilla js datatable, colorlibhq, colorlibhq dashboard, colorlibhq admin dashboard"
+    />
+    <!--end::Primary Meta Tags-->
+    <!--begin::Fonts-->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fontsource/source-sans-3@5.0.12/index.css"
+      integrity="sha256-tXJfXfp6Ewt1ilPzLDtQnJV4hclT9XuaZUKyUvmyr+Q="
+      crossorigin="anonymous"
+    />
+    <!--end::Fonts-->
+    <!--begin::Third Party Plugin(OverlayScrollbars)-->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.10.1/styles/overlayscrollbars.min.css"
+      integrity="sha256-tZHrRjVqNSRyWg2wbppGnT833E/Ys0DHWGwT04GiqQg="
+      crossorigin="anonymous"
+    />
+    <!--end::Third Party Plugin(OverlayScrollbars)-->
+    <!--begin::Third Party Plugin(Bootstrap Icons)-->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+      integrity="sha256-9kPW/n5nn53j4WMRYAxe9c1rCY96Oogo/MKSVdKzPmI="
+      crossorigin="anonymous"
+    />
+    <!--end::Third Party Plugin(Bootstrap Icons)-->
+    <!--begin::Required Plugin(AdminLTE)-->
     <link rel="stylesheet" href="adminlte.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-</head>
-<body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
+    <!--end::Required Plugin(AdminLTE)-->
+  </head>
+  <!--end::Head-->
+  <!--begin::Body-->
+  <body class="layout-fixed sidebar-expand-lg sidebar-mini sidebar-collapse bg-body-tertiary">
+    <!--begin::App Wrapper-->
+    <div class="app-wrapper">
 
-<div class="app-wrapper">
-    <!-- Header -->
-    <nav class="app-header navbar navbar-expand bg-body">
-        <div class="container-fluid">
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a class="nav-link" data-lte-toggle="sidebar" href="#" role="button">
-                        <i class="bi bi-list"></i>
-                    </a>
-                </li>
-                <li class="nav-item d-none d-md-block"><a href="index.php" class="nav-link">Home</a></li>
-                <li class="nav-item"><a href="items.php" class="nav-link">Items</a></li>
-                <li class="nav-item"><a href="customers.php" class="nav-link">Customers</a></li>
-                <li class="nav-item"><a href="suppliers.php" class="nav-link">Suppliers</a></li>
-                <li class="nav-item"><a href="item_customer.php" class="nav-link">Item Customer</a></li>
-                <li class="nav-item"><a href="invoice.php" class="nav-link active">Invoice</a></li>
-            </ul>
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="#" data-lte-toggle="fullscreen">
-                        <i data-lte-icon="maximize" class="bi bi-arrows-fullscreen"></i>
-                        <i data-lte-icon="minimize" class="bi bi-fullscreen-exit" style="display: none"></i>
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </nav>
+      <?php include 'sidebar-navbar.html'; ?>
 
-    <!-- Sidebar -->
-  <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
-    <div class="sidebar-brand">
-      <a href="index.php" class="brand-link"><span class="brand-text fw-light">Wevelope</span></a>
-    </div>
-    <div class="sidebar-wrapper">
-      <nav class="mt-2">
-        <ul class="nav sidebar-menu flex-column">
-          <li class="nav-item"><a href="index.php" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>Home</p></a></li>
-          <li class="nav-item"><a href="items.php" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>Items</p></a></li>
-          <li class="nav-item"><a href="customers.php" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>Customers</p></a></li>
-          <li class="nav-item"><a href="suppliers.php" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>Suppliers</p></a></li>
-          <li class="nav-item"><a href="item_customer.php" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>Item Customer</p></a></li>
-          <li class="nav-item"><a href="invoice.php" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>Invoice</p></a></li>
-        </ul>
-      </nav>
-    </div>
-  </aside>
-
-    <!-- Main Content -->
-    <main class="app-main">
+      <!--begin::App Main-->
+      <main class="app-main">
+        <!--begin::App Content Header-->
         <div class="app-content-header">
-            <div class="container-fluid">
-                <div class="row mb-3">
-                    <div class="col-sm-6"><h3 class="mb-0">Invoice</h3></div>
-                    <div class="col-sm-6">
-                        <ol class="breadcrumb float-sm-end">
-                            <li class="breadcrumb-item"><a href="index.php">Home</a></li>
-                            <li class="breadcrumb-item active"><a href="invoice.php">Invoice</a></li>
-                        </ol>
-                    </div>
-                </div>
-
-                <!-- Notifikasi -->
-                <?php if (isset($_GET['success'])): ?>
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <?php
-                        if ($_GET['success'] === 'add') echo "Invoice berhasil ditambahkan!";
-                        elseif ($_GET['success'] === 'edit') echo "Invoice berhasil diperbarui!";
-                        elseif ($_GET['success'] === 'delete') echo "Invoice berhasil dihapus!";
-                        ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                <?php endif; ?>
-
-                <?php if (isset($_GET['error']) && $_GET['error'] === 'duplicate'): ?>
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        Nama Invoice sudah ada, silakan gunakan nama lain.
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                <?php endif; ?>
-
-                <!-- Form Pencarian Invoice -->
-                <form method="GET" class="row g-3 mb-3 align-items-end">
-  <div class="col-md-3">
-    <input type="text" name="search" class="form-control" placeholder="Kata kunci..." value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
-  </div>
-
-  <div class="col-md-3">
-    <select name="customer_id" class="form-control">
-      <option value="">Pilih Customer</option>
-      <?php mysqli_data_seek($customers, 0); while ($c = mysqli_fetch_assoc($customers)) : ?>
-        <option value="<?= $c['id'] ?>" <?= (isset($_GET['customer_id']) && $_GET['customer_id'] == $c['id']) ? 'selected' : '' ?>>
-          <?= htmlspecialchars($c['name']) ?>
-        </option>
-      <?php endwhile; ?>
-    </select>
-  </div>
-
-  <div class="col-md-2">
-    <input type="date" name="date_from" class="form-control" value="<?= htmlspecialchars($_GET['date_from'] ?? '') ?>">
-  </div>
-
-  <div class="col-auto d-flex align-items-center">
-    <span>sampai</span>
-  </div>
-
-  <div class="col-md-2">
-    <input type="date" name="date_to" class="form-control" value="<?= htmlspecialchars($_GET['date_to'] ?? '') ?>">
-  </div>
-
-  <div class="col-md-2 d-flex">
-    <button class="btn btn-primary me-2" type="submit">Search</button>
-    <a href="invoice.php" class="btn btn-secondary">Reset</a>
-  </div>
-</form>
-                <!-- Form Tambah / Edit Invoice -->
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h3 class="card-title"><?= $edit ? 'Edit Invoice' : 'Tambah Invoice' ?></h3>
-                    </div>
-                    <div class="card-body">
-                        <form method="post" class="row g-3">
-                            <input type="hidden" name="id" value="<?= $edit['id'] ?? '' ?>">
-                            <div class="col-md-4">
-                                <label>Nama Invoice</label>
-                                <input type="text" name="invoice_name" class="form-control" value="<?= $edit['invoice_name'] ?? '' ?>" required>
-                            </div>
-                            <div class="col-md-4">
-                            <label>Customer</label>
-                                <select name="customer_id" class="form-control" required>
-                                    <option value="">Pilih Customer</option>
-                                    <?php mysqli_data_seek($customers, 0); while ($c = mysqli_fetch_assoc($customers)) : ?>
-                                        <option value="<?= $c['id'] ?>" <?= ($edit['customer_id'] ?? '') == $c['id'] ? 'selected' : '' ?>>
-                                            <?= htmlspecialchars($c['name']) ?>
-                                        </option>
-                                    <?php endwhile; ?>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label>Tanggal</label>
-                                <input type="date" name="tanggal" class="form-control" value="<?= $edit['tanggal'] ?? date('Y-m-d') ?>" required>
-                            </div>
-                            <div class="col-12">
-                                <button type="submit" class="btn btn-primary"><?= $edit ? 'Update' : 'Simpan' ?></button>
-                                <?php if ($edit) : ?>
-                                    <a href="invoice.php" class="btn btn-secondary">Batal Edit</a>
-                                <?php endif; ?>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Tabel Daftar Invoice -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Daftar Invoice</h3>
-                    </div>
-                    <div class="card-body table-responsive">
-                        <table class="table table-bordered table-striped">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Nama Invoice</th>
-                                    <th>Customer</th>
-                                    <th>Tanggal</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php $no = 1; while ($row = mysqli_fetch_assoc($invoices)) : ?>
-                                <tr>
-                                    <td><?= $no++ ?></td>
-                                    <td><?= htmlspecialchars($row['invoice_name']) ?></td>
-                                    <td><?= htmlspecialchars($row['customer_name']) ?></td>
-                                    <td><?= htmlspecialchars($row['tanggal']) ?></td>
-                                    <td>
-                                        <a href="?edit=<?= $row['id'] ?>" class="btn btn-sm btn-warning">Edit</a>
-                                        <a href="?delete=<?= $row['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Yakin hapus?')">Delete</a>
-                                        <a href="invoice_detail.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-info">Detail</a>
-                                    </td>
-                                </tr>
-                                <?php endwhile; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
+          <!--begin::Container-->
+          <div class="container-fluid">
+            <!--begin::Row-->
+            <div class="row">
+              <div class="col-sm-6"><h3 class="mb-0">Invoice</h3></div>
+              <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-end">
+                  <li class="breadcrumb-item"><a href="index.php">Home</a></li>
+                  <li class="breadcrumb-item active">Invoice</li>
+                </ol>
+              </div>
             </div>
+            <!--end::Row-->
+          </div>
+          <!--end::Container-->
         </div>
-    </main>
+        <!--end::App Content Header-->
+        <!--begin::App Content-->
+        <div class="app-content">
+          <!--begin::Container-->
+          <div class="container-fluid">
+            <!--begin::Row-->
+            <div class="row">
+              <div class="col-12">
+                 <!-- Success Messages -->
+                <?php if (isset($_GET['success'])): ?>
+                    <div class="alert alert-success alert-dismissible fade show">
+                        <?= $success_messages[$_GET['success']] ?? 'Operasi berhasil' ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <?php endif; ?>
 
-    <!-- Footer -->
-    <footer class="app-footer">
-        <div class="float-end d-none d-sm-inline">This is the homepage</div>
-        <strong>Copyright &copy; 2014-2024 <a href="https://adminlte.io">AdminLTE.io</a>.</strong>
-    </footer>
+                <!-- Error Messages -->
+                <?php if (isset($_GET['error'])): ?>
+                    <div class="alert alert-danger alert-dismissible fade show">
+                        <?= ($_GET['error'] == 'delete') ? 'Gagal menghapus invoice' : 'Terjadi kesalahan' ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <?php endif; ?>
+                <!-- Default box -->
+                <!-- Search Form -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h3 class="card-title">Search Items</h3>
+    </div>
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <input type="text" name="search" class="form-control" placeholder="Cari (Nama, Customer, Tanggal)..." value="<?= htmlspecialchars($search) ?>">
+            </div>
+            <div class="col-md-3">
+                <select name="customer_id" class="form-control">
+                    <option value="">Semua Customer</option>
+                    <?php while ($customer = $customers->fetch_assoc()): ?>
+                        <option value="<?= $customer['id'] ?>" <?= ($customer['id'] == $customer_id) ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($customer['name']) ?>
+                        </option>
+                    <?php endwhile; ?>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="date" name="date_from" class="form-control" placeholder="Dari Tanggal" value="<?= htmlspecialchars($date_from) ?>">
+            </div>
+            <div class="col-md-2">
+                <input type="date" name="date_to" class="form-control" placeholder="Sampai Tanggal" value="<?= htmlspecialchars($date_to) ?>">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary">Cari</button>
+                <a href="invoice.php" class="btn btn-secondary">Reset</a>
+            </div>
+        </form>
+    </div>
 </div>
 
-<!-- AdminLTE JS -->
-<script src="adminlte.js"></script>
-<!-- Bootstrap 5 JS (buat alert dismissible) -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
+<div class="card mb-4">
+    <div class="card-header d-flex align-items-center">
+        <h3 class="card-title me-4 mb-0">Tabel Invoice</h3>
+        <a href="invoice_form.php" class="btn btn-success float-end">
+            <i class="fas fa-plus me-0"></i> Tambah Invoice
+        </a>
+    </div>
+    
+    <!-- Card Body berisi tabel data -->
+    <div class="card-body">
+        <table class="table table-bordered">
+    <thead>
+        <tr class="align-middle">
+            <th style="width: 10px">#</th>
+            <th>Nama Invoice</th>
+            <th>Code Customer</th>
+            <th>Customer</th>
+            <th>Grand Total</th>
+            <th>Status</th>
+            <th>Tanggal</th>
+            <th>Jatuh Tempo</th>
+            <th style="width: 250px">Aksi</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php $no = 1; while ($invoice = $invoices->fetch_assoc()): 
+            // Hitung grand total untuk invoice ini
+            $grand_total_query = $conn->query("SELECT SUM(total_harga) AS grand_total FROM invoice_items WHERE invoice_id = {$invoice['id']}");
+            $grand_total_row = $grand_total_query->fetch_assoc();
+            $grand_total = $grand_total_row['grand_total'] ?? 0;
+        ?>
+            <tr>
+                <td><?= $no++ ?></td>
+                <td><?= htmlspecialchars($invoice['invoice_name']) ?></td>
+                <td><?= htmlspecialchars($invoice['customer_ref_no']) ?></td>
+                <td><?= htmlspecialchars($invoice['customer_name']) ?></td>
+                <td>Rp <?= number_format($grand_total, 0, ',', '.') ?></td>
+                <td>
+                    <span class="badge bg-<?= $invoice['status'] == 'paid' ? 'success' : ($invoice['status'] == 'partial' ? 'warning' : 'danger') ?>">
+                        <?= ucfirst($invoice['status']) ?>
+                    </span>
+                </td>
+                <td><?= date('m-d-Y', strtotime(htmlspecialchars($invoice['tanggal']))) ?></td>
+                <td><?= date('m-d-Y', strtotime(htmlspecialchars($invoice['due_date']))) ?></td>
+                
+                <td>
+                  <a href="invoice_form.php?edit=<?= $invoice['id'] ?>" class="btn btn-sm btn-warning">Edit</a>
+                  <a href="controllers/InvoiceController.php?delete=<?= $invoice['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Yakin hapus?')">Hapus</a>
+                  <a href="invoice_detail.php?id=<?= $invoice['id'] ?>" class="btn btn-sm btn-info">Detail</a>
+                  <a href="invoice_detail_full.php?id=<?= $invoice['id'] ?>" class="btn btn-sm btn-success">Lengkap</a>
+                </td>
+            </tr>
+        <?php endwhile; ?>
+    </tbody>
+</table>
+    </div>
+    
+    <!-- Card Footer dengan pagination -->
+    <div class="card-footer clearfix">
+        <ul class="pagination pagination-sm m-0 float-end">
+            <li class="page-item"><a class="page-link" href="#">«</a></li>
+            <li class="page-item"><a class="page-link" href="#">1</a></li>
+            <li class="page-item"><a class="page-link" href="#">2</a></li>
+            <li class="page-item"><a class="page-link" href="#">3</a></li>
+            <li class="page-item"><a class="page-link" href="#">»</a></li>
+        </ul>
+    </div>
+</div>
+              </div>
+            </div>
+            <!--end::Row-->
+          </div>
+          <!--end::Container-->
+        </div>
+        <!--end::App Content-->
+      </main>
+      <!--end::App Main-->
+      <!--begin::Footer-->
+      <footer class="app-footer">
+        <!--begin::Copyright-->
+        <strong>
+          Copyright &copy; 2014-2024&nbsp;
+          <a href="https://adminlte.io" class="text-decoration-none">AdminLTE.io</a>.
+        </strong>
+        All rights reserved.
+        <!--end::Copyright-->
+      </footer>
+      <!--end::Footer-->
+    </div>
+    <!--end::App Wrapper-->
+    <!--begin::Script-->
+    
+    <?php include 'script.php'; ?>
+
+    <!--end::Script-->
+  </body>
+  <!--end::Body-->
 </html>

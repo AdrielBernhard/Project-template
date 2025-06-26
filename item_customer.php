@@ -1,12 +1,47 @@
+<?php
+include 'db.php';
+
+// Get data for dropdowns (if needed)
+$items = $conn->query("SELECT id, name FROM items")->fetch_all(MYSQLI_ASSOC);
+$customers = $conn->query("SELECT id, name FROM customers")->fetch_all(MYSQLI_ASSOC);
+
+// Search functionality
+$search = $_GET['search'] ?? '';
+$whereClause = '';
+
+if (!empty($search)) {
+    $search = $conn->real_escape_string($search);
+    $whereClause = "WHERE i.name LIKE '%$search%' OR c.name LIKE '%$search%'";
+}
+
+// Get item_customer data
+$data = $conn->query("
+    SELECT ic.id, i.name AS item_name, c.name AS customer_name, ic.harga
+    FROM item_customer ic
+    JOIN items i ON ic.item_id = i.id
+    JOIN customers c ON ic.customer_id = c.id
+    $whereClause
+    ORDER BY ic.id ASC
+")->fetch_all(MYSQLI_ASSOC);
+
+// Status messages
+$status_messages = [
+    'added' => 'Data berhasil ditambahkan',
+    'updated' => 'Data berhasil diperbarui',
+    'deleted' => 'Data berhasil dihapus',
+    'error' => 'Terjadi kesalahan'
+];
+?>
+
 <!doctype html>
 <html lang="en">
   <!--begin::Head-->
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Customers</title>
+    <title>AdminLTE 4 | Sidebar Mini</title>
     <!--begin::Primary Meta Tags-->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="title" content="Customers" />
+    <meta name="title" content="AdminLTE 4 | Sidebar Mini" />
     <meta name="author" content="ColorlibHQ" />
     <meta
       name="description"
@@ -44,276 +79,122 @@
     <!--begin::Required Plugin(AdminLTE)-->
     <link rel="stylesheet" href="adminlte.css" />
     <!--end::Required Plugin(AdminLTE)-->
-    <!-- apexcharts -->
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/apexcharts@3.37.1/dist/apexcharts.css"
-      integrity="sha256-4MX+61mt9NVvvuPjUWdUdyfZfxSB1/Rf9WtqRHgG5S0="
-      crossorigin="anonymous"
-    />
   </head>
-  <body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
+  <!--end::Head-->
+  <!--begin::Body-->
+  <body class="layout-fixed sidebar-expand-lg sidebar-mini sidebar-collapse bg-body-tertiary">
     <!--begin::App Wrapper-->
     <div class="app-wrapper">
-      <!--begin::Header-->
-      <nav class="app-header navbar navbar-expand bg-body">
-        <!--begin::Container-->
-        <div class="container-fluid">
-          <!--begin::Start Navbar Links-->
-          <nav class="app-header navbar navbar-expand bg-body">
-        <div class="container-fluid">
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a class="nav-link" data-lte-toggle="sidebar" href="#" role="button">
-                        <i class="bi bi-list"></i>
-                    </a>
-                </li>
-                <li class="nav-item d-none d-md-block"><a href="index.php" class="nav-link">Home</a></li>
-                <li class="nav-item"><a href="items.php" class="nav-link">Items</a></li>
-                <li class="nav-item"><a href="customers.php" class="nav-link">Customers</a></li>
-                <li class="nav-item"><a href="suppliers.php" class="nav-link">Suppliers</a></li>
-                <li class="nav-item"><a href="item_customer.php" class="nav-link">Item Customer</a></li>
-                <li class="nav-item"><a href="invoice.php" class="nav-link active">Invoice</a></li>
-            </ul>
-        </div>
-    </nav>
-          <!--end::Start Navbar Links-->
-          <!--begin::End Navbar Links-->
-          <ul class="navbar-nav ms-auto">
-            <!--begin::Navbar Search-->
-            
-            <!--end::Navbar Search-->
-            <!--begin::Messages Dropdown Menu-->
-            
-            <!--begin::Fullscreen Toggle-->
-            <li class="nav-item">
-              <a class="nav-link" href="#" data-lte-toggle="fullscreen">
-                <i data-lte-icon="maximize" class="bi bi-arrows-fullscreen"></i>
-                <i data-lte-icon="minimize" class="bi bi-fullscreen-exit" style="display: none"></i>
-              </a>
-            </li>
-            <!--end::Fullscreen Toggle-->
-            <!--begin::User Menu Dropdown-->
-            
-            <!--end::User Menu Dropdown-->
-          </ul>
-          <!--end::End Navbar Links-->
-        </div>
-        <!--end::Container-->
-      </nav>
-      <!--end::Header-->
-      <!--begin::Sidebar-->
-      <!-- Sidebar -->
-  <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
-    <div class="sidebar-brand">
-      <a href="index.php" class="brand-link"><span class="brand-text fw-light">Wevelope</span></a>
-    </div>
-    <div class="sidebar-wrapper"> 
-      <nav class="mt-2">
-        <ul class="nav sidebar-menu flex-column">
-          <li class="nav-item"><a href="index.php" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>Home</p></a></li>
-          <li class="nav-item"><a href="items.php" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>Items</p></a></li>
-          <li class="nav-item"><a href="customers.php" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>Customers</p></a></li>
-          <li class="nav-item"><a href="suppliers.php" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>Suppliers</p></a></li>
-          <li class="nav-item"><a href="item_customer.php" class="nav-link active"><i class="nav-icon bi bi-circle"></i><p>Item Customer</p></a></li>
-          <li class="nav-item"><a href="invoice.php" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>Invoice</p></a></li>
-        </ul>
-      </nav>
-    </div>
-  </aside>
-      <!--end::Sidebar-->
+
+      <?php include 'sidebar-navbar.html'; ?>
+
       <!--begin::App Main-->
       <main class="app-main">
-        <!--begin::App Content Header-->
-<div class="app-content-header">
-  <!--begin::Container-->
-  <div class="container-fluid">
-    <!--begin::Row-->
-    <div class="row mb-3">
-      <div class="col-sm-6"><h3 class="mb-0">Dashboard</h3></div>
-      <div class="col-sm-6">
-        <ol class="breadcrumb float-sm-end">
-          <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-          <li class="breadcrumb-item"><a href="item_customer.php">Item_Customer</a></li>
-          <li class="breadcrumb-item active" aria-current="page"></li>
-        </ol>
-      </div>
-    </div>
-    <!--end::Row-->
+            <div class="app-content-header">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-sm-6"><h3 class="mb-0">Item Customer</h3></div>
+                        <div class="col-sm-6">
+                            <ol class="breadcrumb float-sm-end">
+                                <li class="breadcrumb-item"><a href="index.php">Home</a></li>
+                                <li class="breadcrumb-item active">Item Customer</li>
+                            </ol>
+                        </div>
+                    </div>
 
-    <!-- TABEL ITEMS -->
-    <div class="row">
-      <div class="col-lg-12">
-        <div class="card mb-4">
-          <div class="card-header border-0">
-            <h3 class="card-title">Items</h3>
-          </div>
-          <div class="card-body table-responsive p-0">
-            <table class="table table-striped align-middle">
-              
-              <tbody>
-              <!-- potongan kode dari bagian dalam <main> -->
+                    <!-- Status Messages -->
+                    <?php if (isset($_GET['status'])): ?>
+                        <div class="alert alert-<?= $_GET['status'] == 'error' ? 'danger' : 'success' ?> alert-dismissible fade show">
+                            <?= htmlspecialchars($_GET['message'] ?? $status_messages[$_GET['status']] ?? '') ?>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
 
-<!--begin::App Content Header-->
-<div class="app-content-header">
-  <div class="container-fluid">
-    <div class="row mb-3">
-      <div class="col-sm-6"><h3 class="mb-0">Data Item Customer</h3></div>
-      <div class="col-sm-6">
-        <ol class="breadcrumb float-sm-end">
-        </ol>
-      </div>  
-    </div>
+            <div class="app-content">
+                <div class="container-fluid">
+                    <!-- Search Section -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h3 class="card-title">Search Item Customer</h3>
+                        </div>
+                        <div class="card-body">
+                            <form method="GET" class="row g-3">
+                                <div class="col-md-8">
+                                    <input type="text" name="search" class="form-control" 
+                                           placeholder="Cari berdasarkan item atau customer..." 
+                                           value="<?= htmlspecialchars($search) ?>">
+                                </div>
+                                <div class="col-md-4">
+                                    <button type="submit" class="btn btn-primary me-2">
+                                        <i class="fas fa-search"></i> Search
+                                    </button>
+                                    <a href="item_customer.php" class="btn btn-secondary">
+                                        <i class="fas fa-sync-alt"></i> Reset
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
 
-    <?php
-    include 'db.php';
-
-    // Data untuk dropdown
-    $items = $conn->query("SELECT id, name FROM items")->fetch_all(MYSQLI_ASSOC);
-    $customers = $conn->query("SELECT id, name FROM customers")->fetch_all(MYSQLI_ASSOC);
-
-    // Mode edit
-    $edit = null;
-    if (isset($_GET['edit_id'])) {
-        $stmt = $conn->prepare("SELECT * FROM item_customer WHERE id = ?");
-        $stmt->bind_param("i", $_GET['edit_id']);
-        $stmt->execute();
-        $edit = $stmt->get_result()->fetch_assoc();
-        $stmt->close();
-    }
-
-    // Tampilkan data item_customer
-    $data = $conn->query("
-        SELECT ic.id, i.name AS item_name, c.name AS customer_name, ic.harga
-        FROM item_customer ic
-        JOIN items i ON ic.item_id = i.id
-        JOIN customers c ON ic.customer_id = c.id
-        ORDER BY ic.id ASC
-    ")->fetch_all(MYSQLI_ASSOC);
-
-    $search = $_GET['search'] ?? '';
-    $whereClause = '';
-    
-    if (!empty($search)) {
-        $search = $conn->real_escape_string($search);
-        $whereClause = "WHERE i.name LIKE '%$search%' OR c.name LIKE '%$search%'";
-    }
-    
-    $data = $conn->query("
-        SELECT ic.id, i.name AS item_name, c.name AS customer_name, ic.harga
-        FROM item_customer ic
-        JOIN items i ON ic.item_id = i.id
-        JOIN customers c ON ic.customer_id = c.id
-        $whereClause
-        ORDER BY ic.id ASC
-    ")->fetch_all(MYSQLI_ASSOC);
-     
-?>
-
-
-<form method="GET" class="mb-3">
-  <div class="input-group">
-    <input type="text" name="search" class="form-control" placeholder="Cari item atau customer..." value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
-    <button class="btn btn-primary" type="submit">Search</button>
-    <a href="item_customer.php" class="btn btn-secondary">Reset</a>
-  </div>
-</form>
-
-
-    <div class="row">
-      <div class="col-lg-12">
-        <div class="card mb-4">
-          <div class="card-header"><strong><?= $edit ? 'Edit' : 'Tambah' ?> Data</strong></div>
-          <div class="card-body">
-            <form method="POST" action="controllers/ItemCustomerController.php">
-              <input type="hidden" name="id" value="<?= $edit['id'] ?? '' ?>">
-
-              <div class="mb-3">
-                <label class="form-label">Item</label>
-                <select name="item_id" class="form-control" required>
-                  <option value="">- Pilih Item -</option>
-                  <?php foreach ($items as $item): ?>
-                    <option value="<?= $item['id'] ?>" <?= isset($edit['item_id']) && $edit['item_id'] == $item['id'] ? 'selected' : '' ?>>
-                      <?= htmlspecialchars($item['name']) ?>
-                    </option>
-                  <?php endforeach; ?>
-                </select>
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label">Customer</label>
-                <select name="customer_id" class="form-control" required>
-                  <option value="">- Pilih Customer -</option>
-                  <?php foreach ($customers as $customer): ?>
-                    <option value="<?= $customer['id'] ?>" <?= isset($edit['customer_id']) && $edit['customer_id'] == $customer['id'] ? 'selected' : '' ?>>
-                      <?= htmlspecialchars($customer['name']) ?>
-                    </option>
-                  <?php endforeach; ?>
-                </select>
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label">Harga</label>
-                <input type="number" name="harga" class="form-control" required value="<?= $edit['harga'] ?? '' ?>">
-              </div>
-
-              <button type="submit" name="<?= $edit ? 'update' : 'add' ?>" class="btn btn-primary">
-                <?= $edit ? 'Update' : 'Tambah' ?>
-              </button>
-              <?php if ($edit): ?>
-                <a href="item_customer.php" class="btn btn-secondary ms-2">Batal</a>
-              <?php endif; ?>
-            </form>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-lg-6">
-          <div class="card-body table-responsive p-0">
-            <table class="table table-striped align-middle">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Item</th>
-                  <th>Customer</th>
-                  <th>Harga</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                <?php foreach ($data as $row): ?>
-                  <tr>
-                    <td><?= $row['id'] ?></td>
-                    <td><?= htmlspecialchars($row['item_name']) ?></td>
-                    <td><?= htmlspecialchars($row['customer_name']) ?></td>
-                    <td>Rp. <?= number_format($row['harga'], 0, ',', '.') ?></td>
-                    <td>
-                      <a href="item_customer.php?edit_id=<?= $row['id'] ?>" class="btn btn-sm btn-warning">Edit</a>
-                      <a href="controllers/ItemCustomerController.php?delete=<?= $row['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Yakin ingin menghapus?')">Hapus</a>
-                    </td>
-                  </tr>
-                <?php endforeach; ?>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</div>
-<!--end::App Content Header-->
-
-
-        
-        
-      </main>
+                    <!-- Items Customer Table -->
+                    <div class="card mb-4">
+                        <div class="card-header d-flex align-items-center">
+                            <h3 class="card-title me-4 mb-0">Tabel Item Customer</h3>
+                            <a href="item_customer_form.php" class="btn btn-success float-end">
+                                <i class="fas fa-plus me-0"></i> Tambah Item Customer
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr class="align-middle">
+                                        <th style="width: 10px">#</th>
+                                        <th>Item</th>
+                                        <th>Customer</th>
+                                        <th>Harga</th>
+                                        <th style="width: 170px">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (empty($data)): ?>
+                                        <tr class="align-middle">
+                                            <td colspan="5" class="text-center">Tidak ada data item customer yang ditemukan</td>
+                                        </tr>
+                                    <?php else: ?>
+                                        <?php foreach ($data as $index => $row): ?>
+                                            <tr class="align-middle">
+                                                <td><?= $index + 1 ?></td>
+                                                <td><?= htmlspecialchars($row['item_name']) ?></td>
+                                                <td><?= htmlspecialchars($row['customer_name']) ?></td>
+                                                <td>Rp <?= number_format($row['harga'], 0, ',', '.') ?></td>
+                                                <td>
+                                                    <div class="d-flex gap-2">
+                                                        <a href="item_customer_form.php?edit_id=<?= $row['id'] ?>" 
+                                                           class="btn btn-sm btn-warning">
+                                                            <i class="fas fa-edit me-1"></i> Edit
+                                                        </a>
+                                                        <a href="controllers/ItemCustomerController.php?delete=<?= $row['id'] ?>" 
+                                                           class="btn btn-sm btn-danger" 
+                                                           onclick="return confirm('Yakin ingin menghapus data ini?')">
+                                                            <i class="fas fa-trash-alt me-1"></i> Delete
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
       <!--end::App Main-->
       <!--begin::Footer-->
       <footer class="app-footer">
-        <!--begin::To the end-->
-        <div class="float-end d-none d-sm-inline">This is the homepage</div>
-        <!--end::To the end-->
         <!--begin::Copyright-->
         <strong>
           Copyright &copy; 2014-2024&nbsp;
@@ -326,55 +207,9 @@
     </div>
     <!--end::App Wrapper-->
     <!--begin::Script-->
-    <!--begin::Third Party Plugin(OverlayScrollbars)-->
-    <script
-      src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.10.1/browser/overlayscrollbars.browser.es6.min.js"
-      integrity="sha256-dghWARbRe2eLlIJ56wNB+b760ywulqK3DzZYEpsg2fQ="
-      crossorigin="anonymous"
-    ></script>
-    <!--end::Third Party Plugin(OverlayScrollbars)--><!--begin::Required Plugin(popperjs for Bootstrap 5)-->
-    <script
-      src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
-      integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
-      crossorigin="anonymous"
-    ></script>
-    <!--end::Required Plugin(popperjs for Bootstrap 5)--><!--begin::Required Plugin(Bootstrap 5)-->
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
-      integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
-      crossorigin="anonymous"
-    ></script>
-    <!--end::Required Plugin(Bootstrap 5)--><!--begin::Required Plugin(AdminLTE)-->
-    <script src="adminlte.js"></script>
-    <!--end::Required Plugin(AdminLTE)--><!--begin::OverlayScrollbars Configure-->
-    <script>
-      const SELECTOR_SIDEBAR_WRAPPER = '.sidebar-wrapper';
-      const Default = {
-        scrollbarTheme: 'os-theme-light',
-        scrollbarAutoHide: 'leave',
-        scrollbarClickScroll: true,
-      };
-      document.addEventListener('DOMContentLoaded', function () {
-        const sidebarWrapper = document.querySelector(SELECTOR_SIDEBAR_WRAPPER);
-        if (sidebarWrapper && typeof OverlayScrollbarsGlobal?.OverlayScrollbars !== 'undefined') {
-          OverlayScrollbarsGlobal.OverlayScrollbars(sidebarWrapper, {
-            scrollbars: {
-              theme: Default.scrollbarTheme,
-              autoHide: Default.scrollbarAutoHide,
-              clickScroll: Default.scrollbarClickScroll,
-            },
-          });
-        }
-      });
-    </script>
-    <!--end::OverlayScrollbars Configure-->
-    <!-- OPTIONAL SCRIPTS -->
-    <!-- apexcharts -->
-    <script
-      src="https://cdn.jsdelivr.net/npm/apexcharts@3.37.1/dist/apexcharts.min.js"
-      integrity="sha256-+vh8GkaU7C9/wbSLIcwq82tQ2wTf44aOHA8HlBMwRI8="
-      crossorigin="anonymous"
-    ></script>
+    
+    <?php include 'script.php'; ?>
+
     <!--end::Script-->
   </body>
   <!--end::Body-->

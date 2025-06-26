@@ -6,9 +6,9 @@ $keyword = isset($_GET['search']) ? trim($_GET['search']) : '';
 
 // Get customers data based on search
 if ($keyword !== '') {
-    $stmt = $conn->prepare("SELECT * FROM customers WHERE name LIKE ? OR ref_no LIKE ? ORDER BY id ASC");
+    $stmt = $conn->prepare("SELECT * FROM customers WHERE name LIKE ? OR ref_no LIKE ? OR company_name LIKE ? OR city LIKE ? ORDER BY id ASC");
     $like_keyword = '%' . $keyword . '%';
-    $stmt->bind_param("ss", $like_keyword, $like_keyword);
+    $stmt->bind_param("ssss", $like_keyword, $like_keyword, $like_keyword, $like_keyword);
     $stmt->execute();
     $result = $stmt->get_result();
 } else {
@@ -111,7 +111,7 @@ if ($result) {
                         <?php
                         $messages = [
                             'added' => 'Item berhasil ditambah.',
-                            'updated' => 'Item berhasil diudate.',
+                            'updated' => 'Item berhasil diupdate.',
                             'deleted' => 'Item berhasil dihapus.',
                             'duplicate' => 'Reference number sudah ada. Pakai reference number yang berbeda.'
                         ];
@@ -131,7 +131,7 @@ if ($result) {
                     <form method="GET" class="row g-3">
                       <div class="col-md-8">
                         <input type="text" name="search" class="form-control" 
-                               placeholder="Cari berdasarkan nama atau ref no..." 
+                               placeholder="Cari berdasarkan nama, ref no, perusahaan atau kota..." 
                                value="<?= htmlspecialchars($keyword) ?>">
                       </div>
                       <div class="col-md-4">
@@ -153,48 +153,56 @@ if ($result) {
               <div class="col-lg-12">
                 <div class="card mb-4">
                   <div class="card-header d-flex align-items-center">
-                  <h3 class="card-title me-4 mb-0">Tabel Items</h3>
+                  <h3 class="card-title me-4 mb-0">Tabel Customers</h3>
                   <a href="Customers_form.php" class="btn btn-success float-end">
-                    <i class="fas fa-plus me-0"></i> Tambah Items
+                    <i class="fas fa-plus me-0"></i> Tambah Customer
                   </a>
                   </div>
                   <div class="card-body">
                     <table class="table table-bordered">
-                      <thead>
+                    <thead>
                         <tr class="align-middle">
-                          <th style="width: 10px">#</th>
-                          <th>Ref_No</th>
-                          <th>Nama</th>
-                          <th style="width: 170px">Aksi</th>
+                            <th style="width: 10px">#</th>
+                            <th>Ref_No</th>
+                            <th>Nama</th>
+                            <th>Perusahaan</th>
+                            <th>Alamat</th>
+                            <th>Kota</th>
+                            <th>Negara</th>
+                            <th style="width: 170px">Aksi</th>
                         </tr>
-                      </thead>
+                    </thead>
                       <tbody>
-                        <?php if (empty($customers)): ?>
-                          <tr class="align-middle">
-                            <td colspan="4" class="text-center">Tidak ada data customer</td>
-                          </tr>
-                        <?php else: 
-                          $counter = 1;
-                          foreach ($customers as $customer): ?>
-                            <tr class="align-middle">
-                              <td><?= $counter++ ?></td>
-                              <td><?= htmlspecialchars($customer['ref_no']) ?></td>
-                              <td><?= htmlspecialchars($customer['name']) ?></td>
-                              <td>
-                                <div class="d-flex gap-2">
-                                  <a href="Customers_form.php?edit_id=<?= $customer['id'] ?>" class="btn btn-sm btn-warning">
-                                    <i class="fas fa-edit me-1"></i> Edit
-                                  </a>
-                                  <a href="controllers/CustomersController.php?delete_customer=<?= $customer['id'] ?>"
-                                    class="btn btn-sm btn-danger"
-                                    onclick="return confirm('Yakin ingin menghapus customer ini?')">
-                                    <i class="fas fa-trash-alt me-1"></i> Delete
-                                  </a>
-                                </div>
-                              </td>
-                            </tr>
-                          <?php endforeach;
-                        endif; ?>
+                          <?php if (empty($customers)): ?>
+                              <tr class="align-middle">
+                                  <td colspan="8" class="text-center">Tidak ada data customer</td> <!-- Ubah colspan menjadi 8 -->
+                              </tr>
+                          <?php else: 
+                              $counter = 1;
+                              foreach ($customers as $customer): ?>
+                                  <tr class="align-middle">
+                                      <td><?= $counter++ ?></td>
+                                      <td><?= htmlspecialchars($customer['ref_no']) ?></td>
+                                      <td><?= htmlspecialchars($customer['name']) ?></td>
+                                      <td><?= htmlspecialchars($customer['company_name'] ?? '') ?></td>
+                                      <td><?= htmlspecialchars($customer['company_address'] ?? '') ?></td> <!-- Kolom baru -->
+                                      <td><?= htmlspecialchars($customer['city'] ?? '') ?></td>
+                                      <td><?= htmlspecialchars($customer['country'] ?? '') ?></td> <!-- Kolom baru -->
+                                      <td>
+                                          <div class="d-flex gap-2">
+                                              <a href="Customers_form.php?edit_id=<?= $customer['id'] ?>" class="btn btn-sm btn-warning">
+                                                  <i class="fas fa-edit me-1"></i> Edit
+                                              </a>
+                                              <a href="controllers/CustomersController.php?delete_customer=<?= $customer['id'] ?>"
+                                                  class="btn btn-sm btn-danger"
+                                                  onclick="return confirm('Yakin ingin menghapus customer ini?')">
+                                                  <i class="fas fa-trash-alt me-1"></i> Delete
+                                              </a>
+                                          </div>
+                                      </td>
+                                  </tr>
+                              <?php endforeach;
+                          endif; ?>
                       </tbody>
                     </table>
                   </div>
